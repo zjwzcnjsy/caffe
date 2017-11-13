@@ -17,4 +17,4 @@ if __name__ == '__main__':
             for line in fin:
                 if line.strip():
                     items = line.strip().split()
-                    fout.write('{} {}\n'.format(items[2], items[1])
+                    fout.write('{} {}\n'.format(items[2], items[1]))
