@@ -12,7 +12,7 @@ layer {
     mirror: true
   }
   image_data_param {
-    source: "../data/vggface2/CASIA-WebFace-112X96.txt"
+    source: "/home/jsy/ssd1/data/VGGFace2/train_train.list"
     batch_size: 256
     shuffle: true
   }
@@ -811,7 +811,7 @@ layer {
     decay_mult: 1
   }
   margin_inner_product_param {
-    num_output: 10572
+    num_output: 8631
     type: QUADRUPLE
     weight_filler {
       type: "xavier"

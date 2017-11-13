@@ -4,6 +4,5 @@
 #
 # Example:
 # ./code/sphereface_train.sh 0,1,2,3
-
 GPU_ID=$1
 $CAFFE_HOME/build/tools/caffe train -solver code/sphereface_solver.prototxt -gpu ${GPU_ID} 2>&1 | tee result/sphereface_train.log
