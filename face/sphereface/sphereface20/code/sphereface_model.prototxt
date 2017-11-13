@@ -9,9 +9,11 @@ layer {
     mean_value: 127.5
     mean_value: 127.5
     scale: 0.0078125
+    crop_size: 118
     mirror: true
   }
   image_data_param {
+    root_folder: "/home/jsy/ssd1/data/VGGFace2/train-align-wuxiang2/"
     source: "/home/jsy/ssd1/data/VGGFace2/train_train.list"
     batch_size: 256
     shuffle: true
