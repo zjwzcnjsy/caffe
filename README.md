@@ -5,7 +5,7 @@ cd caffe
 cp Makefile.config.example Makefile.config
 ```
 
-修改Makfile.config文件里的，相关配置，比如python的。
+修改Makfile.config文件里的相关配置，比如python等。
 
 然后编译：
 ``` bash
