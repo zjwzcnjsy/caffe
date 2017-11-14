@@ -13,7 +13,7 @@ layer {
   image_data_param {
     root_folder: "/home/jsy/ssd1/data/VGGFace2/train-align-wuxiang2/"
     source: "/home/jsy/ssd1/data/VGGFace2/train_train.list"
-    batch_size: 256
+    batch_size: 64
     shuffle: true
   }
 }

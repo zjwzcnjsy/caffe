@@ -6,8 +6,6 @@ layer {
   top: "label"
   transform_param {
     mean_value: 127.5
-    mean_value: 127.5
-    mean_value: 127.5
     scale: 0.0078125
     crop_size: 118
     mirror: true
@@ -816,12 +814,13 @@ layer {
     num_output: 8631
     type: QUADRUPLE
     weight_filler {
-      type: "xavier"
+      type: "gaussian"
+      std: 0.01
     }
     base: 1000
-    gamma: 0.015
+    gamma: 0.03
     power: 1
-    lambda_min: 10
+    lambda_min: 5
     iteration: 0
   }
 }
