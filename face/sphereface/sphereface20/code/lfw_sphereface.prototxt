@@ -1,22 +1,34 @@
-name: "SpherefaceNet-20"
 layer {
   name: "data"
   type: "ImageData"
   top: "data"
   top: "label"
+  image_data_param {
+    root_folder: ""
+    source: "lfw_original-align-wuxiang2.list"
+    batch_size: 128
+  }
   transform_param {
-    mean_value: 127.5
-    mean_value: 127.5
+    mirror: false
     mean_value: 127.5
     scale: 0.0078125
     crop_size: 118
-    mirror: true
   }
-  image_data_param {
-    root_folder: "/home/jsy/ssd1/data/VGGFace2/train-align-wuxiang2/"
-    source: "/home/jsy/ssd1/data/VGGFace2/train_train.list"
-    batch_size: 256
-    shuffle: true
+}
+layer {
+  name: "flip_data"
+  type: "Flip"
+  bottom: "data"
+  top: "flip_data"
+}
+layer {
+  name: "concat_data"
+  type: "Concat"
+  bottom: "data"
+  bottom: "flip_data"
+  top: "concat_data"
+  concat_param{
+    axis: 0
   }
 }
 ############## CNN Architecture ###############
@@ -799,36 +811,4 @@ layer {
       value: 0
     }
   }
-}
-############### A-Softmax Loss ##############
-layer {
-  name: "fc6"
-  type: "MarginInnerProduct"
-  bottom: "faceid"
-  bottom: "label"
-  top: "fc6"
-  top: "lambda"
-  param {
-    lr_mult: 1
-    decay_mult: 1
-  }
-  margin_inner_product_param {
-    num_output: 8631
-    type: QUADRUPLE
-    weight_filler {
-      type: "xavier"
-    }
-    base: 1000
-    gamma: 0.015
-    power: 1
-    lambda_min: 10
-    iteration: 0
-  }
-}
-layer {
-  name: "softmax_loss"
-  type: "SoftmaxWithLoss"
-  bottom: "fc6"
-  bottom: "label"
-  top: "softmax_loss"
 }
