@@ -2551,7 +2551,7 @@ layer {
 layer {
   name: "fc6"
   type: "MarginInnerProduct"
-  bottom: "faceid"
+  bottom: "fc5"
   bottom: "label"
   top: "fc6"
   top: "lambda"
@@ -2566,7 +2566,7 @@ layer {
       type: "gaussian"
       std: 0.01
     }
-    base: 1000
+    base: 5
     gamma: 0.03
     power: 1
     lambda_min: 5

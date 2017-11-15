@@ -1,0 +1,53 @@
+name: "FaceResNet20"
+layer {
+  name: "data"
+  type: "ImageData"
+  top: "data"
+  top: "label"
+  transform_param {
+    mean_value: 127.5
+    scale: 0.0078125
+    mirror: true
+    crop_size: 118
+  }
+  image_data_param {
+    root_folder: "/home/jsy/ssd1/data/VGGFace2/train-align-wuxiang2/"
+    source: "/home/jsy/ssd1/data/VGGFace2/train_train.list"
+    batch_size: 64
+    shuffle: true
+  }
+}
+
+############# A-Softmax Loss ##############
+layer {
+  name: "fc6"
+  type: "MarginInnerProduct"
+  bottom: "fc5"
+  bottom: "label"
+  top: "fc6"
+  top: "lambda"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  margin_inner_product_param {
+    num_output: 8631
+    type: QUADRUPLE
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    base: 5
+    gamma: 0.03
+    power: 1
+    lambda_min: 5
+    iteration: 0
+  }
+}
+layer {
+  name: "softmax_loss"
+  type: "SoftmaxWithLoss"
+  bottom: "fc6"
+  bottom: "label"
+  top: "softmax_loss"
+}
