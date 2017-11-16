@@ -11,9 +11,9 @@ layer {
     crop_size: 118
   }
   image_data_param {
-    root_folder: "/home/jsy/ssd1/data/VGGFace2/train-align-wuxiang2/"
-    source: "/home/jsy/ssd1/data/VGGFace2/train_all.list"
-    batch_size: 256
+  	root_folder: "/home/jsy/ssd1/data/MsCelebV1/MsCelebV1-Faces-Cropped_mtcnn_face_rect_r0_normface/"
+	source: "/home/jsy/ssd1/data/MsCelebV1/Ms-1M-2R-train.jpg3.list"
+    batch_size: 128
     shuffle: true
   }
 }
@@ -1105,36 +1105,69 @@ layer {
     }
   }
 }
-############# A-Softmax Loss ##############
+
+############## softmax loss ###############
 layer {
-  name: "fc6"
-  type: "MarginInnerProduct"
+  name: "fc6_softmax"
+  type: "InnerProduct"
   bottom: "fc5"
-  bottom: "label"
-  top: "fc6"
-  top: "lambda"
+  top: "fc6_softmax"
   param {
     lr_mult: 1
     decay_mult: 1
   }
-  margin_inner_product_param {
-    num_output: 8631
-    type: QUADRUPLE
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  inner_product_param {
+    num_output: 61167
     weight_filler {
-      type: "gaussian"
-      std: 0.01
+      type: "xavier"
     }
-    base: 5
-    gamma: 0.03
-    power: 1
-    lambda_min: 5
-    iteration: 0
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
   }
 }
 layer {
   name: "softmax_loss"
   type: "SoftmaxWithLoss"
-  bottom: "fc6"
+  bottom: "fc6_softmax"
   bottom: "label"
   top: "softmax_loss"
 }
+
+############# A-Softmax Loss ##############
+#layer {
+#  name: "fc6"
+#  type: "MarginInnerProduct"
+#  bottom: "fc5"
+#  bottom: "label"
+#  top: "fc6"
+#  top: "lambda"
+#  param {
+#    lr_mult: 1
+#    decay_mult: 1
+#  }
+#  margin_inner_product_param {
+#    num_output: 61167
+#    type: QUADRUPLE
+#    weight_filler {
+#      type: "xavier"
+#    }
+#    base: 1000
+#    gamma: 0.03
+#    power: 1
+#    lambda_min: 5
+#    iteration: 0
+#  }
+#}
+#layer {
+#  name: "softmax_loss"
+#  type: "SoftmaxWithLoss"
+#  bottom: "fc6"
+#  bottom: "label"
+#  top: "softmax_loss"
+#}
