@@ -1106,68 +1106,36 @@ layer {
   }
 }
 
-############## softmax loss ###############
+
+############ A-Softmax Loss ##############
 layer {
-  name: "fc6_softmax"
-  type: "InnerProduct"
+  name: "fc6"
+  type: "MarginInnerProduct"
   bottom: "fc5"
-  top: "fc6_softmax"
+  bottom: "label"
+  top: "fc6"
+  top: "lambda"
   param {
     lr_mult: 1
     decay_mult: 1
   }
-  param {
-    lr_mult: 2
-    decay_mult: 0
-  }
-  inner_product_param {
+  margin_inner_product_param {
     num_output: 61167
+    type: SINGLE
     weight_filler {
       type: "xavier"
     }
-    bias_filler {
-      type: "constant"
-      value: 0
-    }
+    base: 0
+    gamma: 0.006
+    power: 1
+    lambda_min: 5
+    iteration: 0
   }
 }
 layer {
   name: "softmax_loss"
   type: "SoftmaxWithLoss"
-  bottom: "fc6_softmax"
+  bottom: "fc6"
   bottom: "label"
   top: "softmax_loss"
 }
-
-############# A-Softmax Loss ##############
-#layer {
-#  name: "fc6"
-#  type: "MarginInnerProduct"
-#  bottom: "fc5"
-#  bottom: "label"
-#  top: "fc6"
-#  top: "lambda"
-#  param {
-#    lr_mult: 1
-#    decay_mult: 1
-#  }
-#  margin_inner_product_param {
-#    num_output: 61167
-#    type: QUADRUPLE
-#    weight_filler {
-#      type: "xavier"
-#    }
-#    base: 1000
-#    gamma: 0.03
-#    power: 1
-#    lambda_min: 5
-#    iteration: 0
-#  }
-#}
-#layer {
-#  name: "softmax_loss"
-#  type: "SoftmaxWithLoss"
-#  bottom: "fc6"
-#  bottom: "label"
-#  top: "softmax_loss"
-#}

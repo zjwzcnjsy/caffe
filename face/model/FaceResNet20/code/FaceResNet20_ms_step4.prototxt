@@ -1106,9 +1106,10 @@ layer {
   }
 }
 
-############# A-Softmax Loss ##############
+
+############ A-Softmax Loss ##############
 layer {
-  name: "fc6_asoftmax"
+  name: "fc6"
   type: "MarginInnerProduct"
   bottom: "fc5"
   bottom: "label"
@@ -1120,14 +1121,14 @@ layer {
   }
   margin_inner_product_param {
     num_output: 61167
-    type: QUADRUPLE
+    type: DOUBLE
     weight_filler {
       type: "xavier"
     }
-    base: 100
-    gamma: 0.03
+    base: 0
+    gamma: 0.006
     power: 1
-    lambda_min: 5
+    lambda_min: 0.5
     iteration: 0
   }
 }

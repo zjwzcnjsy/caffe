@@ -1,27 +1,37 @@
 name: "FaceResNet20"
 layer {
   name: "data"
-  type: "ImageData"
+  type: "Input"
   top: "data"
-  top: "label"
-  transform_param {
-    mean_value: 127.5
-    scale: 0.0078125
-    mirror: true
-    crop_size: 118
-  }
-  image_data_param {
-  	root_folder: "/home/jsy/ssd1/data/MsCelebV1/MsCelebV1-Faces-Cropped_mtcnn_face_rect_r0_normface/"
-	source: "/home/jsy/ssd1/data/MsCelebV1/Ms-1M-2R-train.jpg3.list"
-    batch_size: 128
-    shuffle: true
+  input_param {
+	shape: {
+		dim: 1
+		dim: 3
+		dim: 118
+		dim: 118
+	}
   }
 }
-
+layer {
+  name: "flip_data"
+  type: "Flip"
+  bottom: "data"
+  top: "flip_data"
+}
+layer {
+  name: "concat_data"
+  type: "Concat"
+  bottom: "data"
+  bottom: "flip_data"
+  top: "concat_data"
+  concat_param{
+    axis: 0
+  }
+}
 layer {
   name: "conv1a"
   type: "Convolution"
-  bottom: "data"
+  bottom: "concat_data"
   top: "conv1a"
   param {
     lr_mult: 1
@@ -1105,36 +1115,24 @@ layer {
     }
   }
 }
-
-############# A-Softmax Loss ##############
 layer {
-  name: "fc6_asoftmax"
-  type: "MarginInnerProduct"
+  name: "slice_eltwise_fc1"
+  type: "Slice"
   bottom: "fc5"
-  bottom: "label"
-  top: "fc6"
-  top: "lambda"
-  param {
-    lr_mult: 1
-    decay_mult: 1
-  }
-  margin_inner_product_param {
-    num_output: 61167
-    type: QUADRUPLE
-    weight_filler {
-      type: "xavier"
-    }
-    base: 100
-    gamma: 0.03
-    power: 1
-    lambda_min: 5
-    iteration: 0
-  }
+  top: "eltwise_fc1_orig"
+  top: "eltwise_fc1_mirror"
+  slice_param {
+    axis: 0
+    slice_point: 1
+ }
 }
 layer {
-  name: "softmax_loss"
-  type: "SoftmaxWithLoss"
-  bottom: "fc6"
-  bottom: "label"
-  top: "softmax_loss"
+  name: "eltmax_eltwise_fc1"
+  type: "Eltwise"
+  bottom: "eltwise_fc1_orig"
+  bottom: "eltwise_fc1_mirror"
+  top: "faceid"
+  eltwise_param { 
+    operation: SUM
+  }
 }
