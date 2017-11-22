@@ -308,7 +308,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 150 (last added: recurrent_param)
+// LayerParameter next available layer-specific ID: 151 (last added: recurrent_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -410,6 +410,7 @@ message LayerParameter {
   optional LargeMarginInnerProductParameter largemargin_inner_product_param = 147;
   optional MarginInnerProductParameter margin_inner_product_param = 148;
   optional FlipParameter flip_param = 149;
+  optional ShuffleChannelParameter shuffle_channel_param = 150;
 }
 
 // Message that stores parameters used to apply transformation
@@ -1267,9 +1268,14 @@ message MarginInnerProductParameter {
 
 // 对输入的blob在空间上做上下或者左右的翻转
 // 来自https://github.com/happynear/caffe-windows
-message FlipParameter{
+message FlipParameter {
 	optional bool flip_width = 1[default = true];
 	optional bool flip_height = 2[default = false];
+}
+
+// 来自https://github.com/farmingyard/ShuffleNet
+message ShuffleChannelParameter {
+	optional uint32 group = 1[default = 1]; // The number of group
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
