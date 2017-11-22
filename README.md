@@ -1,6 +1,6 @@
 ## 安装
 ``` bash
-git clone http://192.168.1.105:8888/jsy/caffe.git
+git clone https://github.com/zjwzcnjsy/caffe.git
 cd caffe
 cp Makefile.config.example Makefile.config
 ```
