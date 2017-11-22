@@ -1144,10 +1144,10 @@ layer {
     weight_filler {
       type: "xavier"
     }
-    base: 10
-    gamma: 0.0005
+    base: 5
+    gamma: 0.12
     power: 1
-    lambda_min: 5
+    lambda_min: 4
     iteration: 0
   }
 }

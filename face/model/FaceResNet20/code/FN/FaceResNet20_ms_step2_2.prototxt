@@ -1147,7 +1147,7 @@ layer {
     base: 0
     gamma: 0.006
     power: 1
-    lambda_min: 10
+    lambda_min: 5
     iteration: 0
   }
 }
