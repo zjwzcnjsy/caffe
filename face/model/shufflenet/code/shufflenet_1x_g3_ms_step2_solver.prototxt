@@ -10,7 +10,7 @@ max_iter: 50000
 
 display: 100
 momentum: 0.9
-weight_decay: 0.0005
+weight_decay: 0.0001
 snapshot: 10000
 snapshot_prefix: "result/shufflenet_1x_g3_ms_step2"
 
