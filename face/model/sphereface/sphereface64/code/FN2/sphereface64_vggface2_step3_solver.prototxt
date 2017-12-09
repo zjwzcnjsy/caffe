@@ -1,0 +1,19 @@
+net: "code/FN2/sphereface64_vggface2_step3.prototxt"
+#test_iter: 100 
+#test_interval: 2000
+
+base_lr: 0.001
+lr_policy: "multistep"
+gamma: 0.1
+
+stepvalue: 20000
+stepvalue: 40000
+max_iter: 60000
+
+display: 100
+momentum: 0.9
+weight_decay: 0.0001
+snapshot: 10000
+snapshot_prefix: "result/FN2/sphereface64_vggface2_step3"
+
+solver_mode: GPU
