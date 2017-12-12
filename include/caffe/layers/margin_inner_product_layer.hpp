@@ -26,8 +26,11 @@ class MarginInnerProductLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "MarginInnerProduct"; }
+  //virtual inline int MinBottomBlobs() const { return 2; }
+  //virtual inline int MaxBottomBlobs() const { return 3; }
   virtual inline int ExactNumBottomBlobs() const { return 2; }
-  virtual inline int MaxTopBlobs() const { return 2; }
+  virtual inline int MinTopBlobs() const { return 2; }
+  virtual inline int MaxTopBlobs() const { return 3; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,

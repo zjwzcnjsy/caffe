@@ -231,6 +231,7 @@ void MarginInnerProductLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bot
   lambda_ = max(lambda_, lambda_min_);
   top[1]->mutable_cpu_data()[0] = lambda_;
 
+
   const Dtype* bottom_data = bottom[0]->gpu_data();
   const Dtype* weight = this->blobs_[0]->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();
@@ -327,6 +328,9 @@ void MarginInnerProductLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bot
   default:
     LOG(FATAL) << "Unknown margin type.";
   }
+  if (top.size() == 3) {                                                                                           
+	caffe_gpu_memcpy(top[2]->count(), this->blobs_[0]->gpu_data(), top[2]->mutable_gpu_data());
+  }
 }
 
 template <typename Dtype>
@@ -338,8 +342,12 @@ void MarginInnerProductLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& to
   const Dtype* label = bottom[1]->gpu_data();
   const Dtype* weight = this->blobs_[0]->gpu_data();
 
+
   if (this->param_propagate_down_[0]) {
     // Gradient with respect to weight
+	if (top.size() == 3) {
+	  caffe_gpu_memcpy(top[2]->count(), top[2]->gpu_diff(), this->blobs_[0]->mutable_gpu_diff());
+	}
     caffe_gpu_gemm<Dtype>(CblasTrans, CblasNoTrans, N_, K_, M_, (Dtype)1.,
         top_diff, bottom_data, (Dtype)1., this->blobs_[0]->mutable_gpu_diff());
   }

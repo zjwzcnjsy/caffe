@@ -20,6 +20,9 @@ void CenterLossLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // Check if we need to set up the weights
   if (this->blobs_.size() > 0) {
     LOG(INFO) << "Skipping parameter initialization";
+  } else if(bottom.size() == 3) {
+	this->blobs_.resize(1);
+	this->blobs_[0].reset(bottom[2]);
   } else {
     this->blobs_.resize(1);
     // Intialize the weight

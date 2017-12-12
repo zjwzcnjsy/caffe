@@ -69,9 +69,15 @@ void MarginInnerProductLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   top[0]->Reshape(top_shape);
 
   // if needed, reshape top[1] to output lambda
-  if (top.size() == 2) {
+  if (top.size() >= 2) {
     vector<int> lambda_shape(1, 1);
     top[1]->Reshape(lambda_shape);
+  }
+  if (top.size() == 3) {
+    vector<int> weight_shape(2);
+    weight_shape[0] = N_;
+    weight_shape[1] = K_;
+    top[2]->Reshape(weight_shape);
   }
   
   // common temp variables
@@ -116,6 +122,7 @@ void MarginInnerProductLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bot
   lambda_ = base_ * pow(((Dtype)1. + gamma_ * iter_), -power_);
   lambda_ = std::max(lambda_, lambda_min_);
   top[1]->mutable_cpu_data()[0] = lambda_;
+
 
   /************************* normalize weight *************************/
   Dtype* norm_weight = this->blobs_[0]->mutable_cpu_data();
@@ -260,6 +267,10 @@ void MarginInnerProductLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bot
     LOG(FATAL) << "Unknown margin type.";
   }
   }
+  if (top.size() == 3) {
+	// TODO: 
+	//caffe_cpu_memcpy(top[2]->count(), this->blobs_[0]->cpu_data(),top[2]->mutable_cpu_data());
+  }
 }
 
 template <typename Dtype>
@@ -271,9 +282,14 @@ void MarginInnerProductLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& to
   const Dtype* bottom_data = bottom[0]->cpu_data();
   const Dtype* label = bottom[1]->cpu_data();
   const Dtype* weight = this->blobs_[0]->cpu_data();
+
  
   // Gradient with respect to weight
   if (this->param_propagate_down_[0]) {
+	if (top.size() == 3) {
+		// TODO: 
+		//caffe_cpu_memcpy(top[2]->count(), top[2]->cpu_diff(), this->blobs_[0]->mutable_cpu_diff());
+	}
     caffe_cpu_gemm<Dtype>(CblasTrans, CblasNoTrans, N_, K_, M_, (Dtype)1.,
         top_diff, bottom_data, (Dtype)1., this->blobs_[0]->mutable_cpu_diff());
   }
