@@ -142,6 +142,8 @@ DEFINE_CAFFE_CPU_UNARY_FUNC(sgnbit, \
 
 DEFINE_CAFFE_CPU_UNARY_FUNC(fabs, y[i] = std::fabs(x[i]))
 
+DEFINE_CAFFE_CPU_UNARY_FUNC(max, y[i] = std::max(x[i], y[i]))
+
 template <typename Dtype>
 void caffe_cpu_scale(const int n, const Dtype alpha, const Dtype *x, Dtype* y);
 
