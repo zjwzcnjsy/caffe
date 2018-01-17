@@ -308,7 +308,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 153 (last added: recurrent_param)
+// LayerParameter next available layer-specific ID: 154 (last added: recurrent_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -413,6 +413,7 @@ message LayerParameter {
   optional ShuffleChannelParameter shuffle_channel_param = 150;
   optional CenterLossParameter center_loss_param = 151;
   optional AngularTripletLossParameter angular_triplet_loss_param = 152;
+  optional NormalizeParameter normalize_param = 153;
 }
 
 // Message that stores parameters used to apply transformation
@@ -1304,6 +1305,7 @@ message FlipParameter {
 message ShuffleChannelParameter {
 	optional uint32 group = 1[default = 1]; // The number of group
 }
+
 // center loss代价，来自论文《A Discriminative Feature Learning Approach for Deep Face Recognition》
 message CenterLossParameter {
 	optional uint32 num_output = 1; // The number of outputs for the layer
@@ -1312,6 +1314,14 @@ message CenterLossParameter {
 	// all preceding axes are retained in the output.
 	// May be negative to index from the end (e.g., -1 for the last axis).
 	optional int32 axis = 3 [default = 1];
+}
+
+// 对输入做L2或者L1归一化
+// 来自https://github.com/happynear/caffe-windows
+message NormalizeParameter {
+  optional string normalize_type = 1 [default = "L2"];
+  optional bool fix_gradient = 2 [default = false];
+  optional bool bp_norm = 3 [default = false];
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
