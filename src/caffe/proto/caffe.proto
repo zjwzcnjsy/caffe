@@ -1114,6 +1114,8 @@ message ScaleParameter {
   // may be more efficient).  Initialized with bias_filler (defaults to 0).
   optional bool bias_term = 4 [default = false];
   optional FillerParameter bias_filler = 5;
+  optional float min_value = 6;
+  optional float max_value = 7;
 }
 
 message SigmoidParameter {
