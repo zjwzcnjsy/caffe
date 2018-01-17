@@ -47,7 +47,7 @@ void AngularTripletLossLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype> *> &bot
     weight_shape[1] = K_;
     this->blobs_[0].reset(new Blob<Dtype>(weight_shape));
     // fill the weights
-    shared_ptr<Filler<Dtype>> weight_filler(GetFiller<Dtype>(
+    shared_ptr<Filler<Dtype> > weight_filler(GetFiller<Dtype>(
         this->layer_param_.angular_triplet_loss_param().weight_filler()));
     weight_filler->Fill(this->blobs_[0].get());
   } // parameter initialization
