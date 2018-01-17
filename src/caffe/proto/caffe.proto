@@ -308,7 +308,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 152 (last added: recurrent_param)
+// LayerParameter next available layer-specific ID: 153 (last added: recurrent_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -412,6 +412,7 @@ message LayerParameter {
   optional FlipParameter flip_param = 149;
   optional ShuffleChannelParameter shuffle_channel_param = 150;
   optional CenterLossParameter center_loss_param = 151;
+  optional AngularTripletLossParameter angular_triplet_loss_param = 152;
 }
 
 // Message that stores parameters used to apply transformation
@@ -1265,6 +1266,31 @@ message MarginInnerProductParameter {
   optional float power = 7 [default = 1];
   optional int32 iteration = 8 [default = 0];
   optional float lambda_min = 9 [default = 0];
+}
+
+// https://github.com/KaleidoZhouYN/Angular-Triplet-Loss
+message AngularTripletLossParameter {
+  optional uint32 num_output = 1; // The number of outputs for the layer
+  enum MarginType {
+    SINGLE = 0;
+    DOUBLE = 1;
+    TRIPLE = 2;
+    QUADRUPLE = 3;
+  }
+  optional MarginType type = 2 [default = SINGLE]; 
+  optional FillerParameter weight_filler = 3; // The filler for the weight
+                          
+  // The first axis to be lumped into a single inner product computation;
+  // all preceding axes are retained in the output.
+  // May be negative to index from the end (e.g., -1 for the last axis).
+  optional int32 axis = 4 [default = 1];
+  optional float base = 5 [default = 1];
+  optional float gamma = 6 [default = 0];
+  optional float power = 7 [default = 1];
+  optional int32 iteration = 8 [default = 0];
+  optional float lambda_min = 9 [default = 0];
+  optional bool triplet = 10 [default = false];
+  optional bool semihard = 11 [default = false];
 }
 
 // 对输入的blob在空间上做上下或者左右的翻转
