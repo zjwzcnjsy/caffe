@@ -1,0 +1,68 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libcaffe", "libcaffe\libcaffe.vcxproj", "{48C96A9B-C1DE-4573-A6FF-E6A4EC28C37B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "props", "props", "{306666A4-3570-45C9-B4DF-3B2B5C6131DA}"
+	ProjectSection(SolutionItems) = preProject
+		CommonSettings.props = CommonSettings.props
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{72F585B3-E9CA-4E7B-BD5A-9B2B24843DD3}"
+	ProjectSection(SolutionItems) = preProject
+		scripts\BinplaceCudaDependencies.cmd = scripts\BinplaceCudaDependencies.cmd
+		scripts\BinplaceDependencies.cmd = scripts\BinplaceDependencies.cmd
+		scripts\FixGFlagsNaming.cmd = scripts\FixGFlagsNaming.cmd
+		scripts\MatlabPostBuild.cmd = scripts\MatlabPostBuild.cmd
+		scripts\MatlabPreBuild.cmd = scripts\MatlabPreBuild.cmd
+		scripts\ProtoCompile.cmd = scripts\ProtoCompile.cmd
+		scripts\PythonPostBuild.cmd = scripts\PythonPostBuild.cmd
+		scripts\PythonPreBuild.cmd = scripts\PythonPreBuild.cmd
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "caffe", "caffe\caffe.vcxproj", "{383ADB09-8C1E-4D05-B84D-03FFA849DDA6}"
+	ProjectSection(ProjectDependencies) = postProject
+		{48C96A9B-C1DE-4573-A6FF-E6A4EC28C37B} = {48C96A9B-C1DE-4573-A6FF-E6A4EC28C37B}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pycaffe", "pycaffe\pycaffe.vcxproj", "{AE2EA2B5-F25B-45D1-AE01-A533A1CF434F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{48C96A9B-C1DE-4573-A6FF-E6A4EC28C37B}.Debug|x64.ActiveCfg = Release|x64
+		{48C96A9B-C1DE-4573-A6FF-E6A4EC28C37B}.Debug|x64.Build.0 = Release|x64
+		{48C96A9B-C1DE-4573-A6FF-E6A4EC28C37B}.Debug|x86.ActiveCfg = Release|x64
+		{48C96A9B-C1DE-4573-A6FF-E6A4EC28C37B}.Debug|x86.Build.0 = Release|x64
+		{48C96A9B-C1DE-4573-A6FF-E6A4EC28C37B}.Release|x64.ActiveCfg = Release|x64
+		{48C96A9B-C1DE-4573-A6FF-E6A4EC28C37B}.Release|x64.Build.0 = Release|x64
+		{48C96A9B-C1DE-4573-A6FF-E6A4EC28C37B}.Release|x86.ActiveCfg = Release|x64
+		{48C96A9B-C1DE-4573-A6FF-E6A4EC28C37B}.Release|x86.Build.0 = Release|x64
+		{383ADB09-8C1E-4D05-B84D-03FFA849DDA6}.Debug|x64.ActiveCfg = Release|x64
+		{383ADB09-8C1E-4D05-B84D-03FFA849DDA6}.Debug|x64.Build.0 = Release|x64
+		{383ADB09-8C1E-4D05-B84D-03FFA849DDA6}.Debug|x86.ActiveCfg = Release|x64
+		{383ADB09-8C1E-4D05-B84D-03FFA849DDA6}.Debug|x86.Build.0 = Release|x64
+		{383ADB09-8C1E-4D05-B84D-03FFA849DDA6}.Release|x64.ActiveCfg = Release|x64
+		{383ADB09-8C1E-4D05-B84D-03FFA849DDA6}.Release|x64.Build.0 = Release|x64
+		{383ADB09-8C1E-4D05-B84D-03FFA849DDA6}.Release|x86.ActiveCfg = Release|x64
+		{383ADB09-8C1E-4D05-B84D-03FFA849DDA6}.Release|x86.Build.0 = Release|x64
+		{AE2EA2B5-F25B-45D1-AE01-A533A1CF434F}.Debug|x64.ActiveCfg = Debug|x64
+		{AE2EA2B5-F25B-45D1-AE01-A533A1CF434F}.Debug|x64.Build.0 = Debug|x64
+		{AE2EA2B5-F25B-45D1-AE01-A533A1CF434F}.Debug|x86.ActiveCfg = Debug|Win32
+		{AE2EA2B5-F25B-45D1-AE01-A533A1CF434F}.Debug|x86.Build.0 = Debug|Win32
+		{AE2EA2B5-F25B-45D1-AE01-A533A1CF434F}.Release|x64.ActiveCfg = Release|x64
+		{AE2EA2B5-F25B-45D1-AE01-A533A1CF434F}.Release|x64.Build.0 = Release|x64
+		{AE2EA2B5-F25B-45D1-AE01-A533A1CF434F}.Release|x86.ActiveCfg = Release|Win32
+		{AE2EA2B5-F25B-45D1-AE01-A533A1CF434F}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

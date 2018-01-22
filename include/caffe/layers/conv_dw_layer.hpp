@@ -29,14 +29,14 @@ class ConvolutionDepthwiseLayer : public Layer<Dtype> {
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
-  unsigned int kernel_h_;
-  unsigned int kernel_w_;
-  unsigned int stride_h_;
-  unsigned int stride_w_;
-  unsigned int pad_h_;
-  unsigned int pad_w_;
-  unsigned int dilation_h_;
-  unsigned int dilation_w_;
+  int kernel_h_;
+  int kernel_w_;
+  int stride_h_;
+  int stride_w_;
+  int pad_h_;
+  int pad_w_;
+  int dilation_h_;
+  int dilation_w_;
   Blob<Dtype> weight_buffer_;
   Blob<Dtype> weight_multiplier_;
   Blob<Dtype> bias_buffer_;
