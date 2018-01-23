@@ -7,6 +7,7 @@
         <!--NOTE: CpuOnlyBuild and UseCuDNN flags can't be set at the same time.-->
         <CpuOnlyBuild>false</CpuOnlyBuild>
         <UseCuDNN>true</UseCuDNN>
+        <UseNCCL>true</UseNCCL>
         <CudaVersion>8.0</CudaVersion>
         <!-- NOTE: If Python support is enabled, PythonDir (below) needs to be
          set to the root of your Python installation. If your Python installation
@@ -16,15 +17,15 @@
         <!-- NOTE: If Matlab support is enabled, MatlabDir (below) needs to be
          set to the root of your Matlab installation. -->
         <MatlabSupport>true</MatlabSupport>
-        <MatlabDir>C:\Program Files\MATLAB\R2013a</MatlabDir>
+        <MatlabDir>C:\Program Files\MATLAB\R2016a</MatlabDir>
         <CudaDir>C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0</CudaDir>
 
         <!-- Set CUDA architecture suitable for your GPU.
          Setting proper architecture is important to mimize your run and compile time. -->
-        <CudaArchitecture>compute_52,sm_52;</CudaArchitecture>
+        <CudaArchitecture>compute_30,sm_30;compute_35,sm_35;compute_50,sm_50;compute_52,sm_52;compute_61,sm_61;</CudaArchitecture>
 
         <!-- CuDNN 3 and 4 are supported -->
-        <CuDnnPath>D:\libs\cuda\cudnn\cudnn-8.0-windows10-x64-v5.1</CuDnnPath>
+        <CuDnnPath>D:\bin\libs\cuda\cudnn-8.0-windows7-x64-v5.1</CuDnnPath>
         <ScriptsDir>$(SolutionDir)scripts</ScriptsDir>
     </PropertyGroup>
     <PropertyGroup Condition="'$(CpuOnlyBuild)'=='false'">
@@ -38,9 +39,14 @@
         <LibraryPath>$(CuDnnPath)\cuda\lib\x64;$(LibraryPath)</LibraryPath>
         <IncludePath>$(CuDnnPath)\cuda\include;$(IncludePath)</IncludePath>
     </PropertyGroup>
+    <PropertyGroup Condition="'$(UseNCCL)'=='true'">
+      <CudaDependencies>nccl.lib;$(CudaDependencies)</CudaDependencies>
+      <LibraryPath>$(DependencyDir)/NCCL/lib;$(LibraryPath)</LibraryPath>
+      <IncludePath>$(DependencyDir)/NCCL/include;$(IncludePath)</IncludePath>
+    </PropertyGroup>
     <PropertyGroup>
-        <OutDir>$(BuildDir)\$(Platform)\$(Configuration)2\</OutDir>
-        <IntDir>$(BuildDir)\Int2\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+        <OutDir>$(BuildDir)\$(Platform)\$(Configuration)\</OutDir>
+        <IntDir>$(BuildDir)\Int\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
         <IncludePath>$(DependencyDir)/Boost;$(DependencyDir)/GFlags/Include;$(DependencyDir)/GLog/include;$(DependencyDir)/HDF5/include;$(DependencyDir)/LEVELDB/include;$(DependencyDir)/LMDB/include;$(DependencyDir)/OpenBLAS/include;$(DependencyDir)/OpenCV/include;$(DependencyDir)/Protobuf/include;$(IncludePath)</IncludePath>
         <LibraryPath>$(DependencyDir)/Boost/lib64-msvc-14.0;$(DependencyDir)/GFlags/Lib;$(DependencyDir)/GLog/lib;$(DependencyDir)/HDF5/lib;$(DependencyDir)/LEVELDB/lib;$(DependencyDir)/LMDB/lib;$(DependencyDir)/OpenBLAS/lib;$(DependencyDir)/OpenCV/x64/vc14/lib;$(DependencyDir)/Protobuf/lib;$(LibraryPath)</LibraryPath>
     </PropertyGroup>
@@ -72,6 +78,14 @@
             <Defines>USE_CUDNN</Defines>
         </CudaCompile>
     </ItemDefinitionGroup>
+    <ItemDefinitionGroup Condition="'$(UseNCCL)'=='true'">
+      <ClCompile>
+        <PreprocessorDefinitions>USE_NCCL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      </ClCompile>
+      <CudaCompile>
+        <Defines>USE_NCCL</Defines>
+      </CudaCompile>
+    </ItemDefinitionGroup>
     <ItemDefinitionGroup Condition="'$(PythonSupport)'=='true'">
         <ClCompile>
             <PreprocessorDefinitions>WITH_PYTHON_LAYER;BOOST_PYTHON_STATIC_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -90,7 +104,7 @@
             <TreatWarningAsError>false</TreatWarningAsError>
         </ClCompile>
         <Link>
-          <AdditionalDependencies>gflags.lib;glog.lib;hdf5.lib;hdf5_hl.lib;szip.lib;zlib.lib;leveldb.lib;lmdb.lib;libopenblas.dll.a;opencv_world310.lib;libprotobuf.lib;%(CudaDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+          <AdditionalDependencies>libboost_filesystem-vc140-mt-1_64.lib;gflags.lib;glog.lib;hdf5.lib;hdf5_hl.lib;szip.lib;zlib.lib;leveldb.lib;lmdb.lib;libopenblas.dll.a;opencv_world310.lib;libprotobuf.lib;%(CudaDependencies);%(AdditionalDependencies)</AdditionalDependencies>
         </Link>
     </ItemDefinitionGroup>
     <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
