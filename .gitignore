@@ -98,3 +98,9 @@ LOCK
 LOG*
 CURRENT
 MANIFEST-*
+
+
+# vs
+*.sdf
+*.pdb
+.vs
