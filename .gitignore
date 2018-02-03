@@ -104,3 +104,4 @@ MANIFEST-*
 *.sdf
 *.pdb
 .vs
+*VC.opendb

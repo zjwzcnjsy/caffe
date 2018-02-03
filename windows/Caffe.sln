@@ -66,6 +66,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "convert_mnist_siamese_data"
 		{48C96A9B-C1DE-4573-A6FF-E6A4EC28C37B} = {48C96A9B-C1DE-4573-A6FF-E6A4EC28C37B}
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "proto", "proto", "{77BC43E0-AA9E-408F-94BF-42BAF9254980}"
+	ProjectSection(SolutionItems) = preProject
+		..\src\caffe\proto\caffe.proto = ..\src\caffe\proto\caffe.proto
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
