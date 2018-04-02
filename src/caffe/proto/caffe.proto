@@ -308,7 +308,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 156 (last added: recurrent_param)
+// LayerParameter next available layer-specific ID: 157 (last added: recurrent_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -416,6 +416,7 @@ message LayerParameter {
   optional NormalizeParameter normalize_param = 153;
   optional LabelSpecificAddParameter label_specific_add_param = 154;
   optional AdditiveAngularMarginParameter additive_angular_margin_param = 155;
+  optional PermuteParameter permute_param = 156;
 }
 
 // Message that stores parameters used to apply transformation
@@ -1339,6 +1340,14 @@ message LabelSpecificAddParameter {
 // 《ArcFace: Additive Angular Margin Loss for Deep Face Recognition》
 message AdditiveAngularMarginParameter {
 	optional float margin = 1 [default = 0.5];
+}
+
+// 来自https://github.com/zjwzcnjsy/caffe-ssd
+message PermuteParameter{
+	// The new orders of the axes of data. Notice it should be with
+	// in the same range as the input data, and it starts from 0.
+	// Do not provide repeated order.
+	repeated uint32 order = 1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
