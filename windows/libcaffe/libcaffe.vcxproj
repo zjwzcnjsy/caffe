@@ -29,6 +29,7 @@
     <ClInclude Include="..\..\include\caffe\layers\absval_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\accuracy_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\additive_angular_margin_layer.hpp" />
+    <ClInclude Include="..\..\include\caffe\layers\affine_transform_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\angular_triplet_loss_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\argmax_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\base_conv_layer.hpp" />
@@ -72,6 +73,10 @@
     <ClInclude Include="..\..\include\caffe\layers\inner_product_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\input_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\label_specific_add_layer.hpp" />
+    <ClInclude Include="..\..\include\caffe\layers\landmark_image_layer.hpp" />
+    <ClInclude Include="..\..\include\caffe\layers\landmark_init_layer.hpp" />
+    <ClInclude Include="..\..\include\caffe\layers\landmark_pair_loss_layer.hpp" />
+    <ClInclude Include="..\..\include\caffe\layers\landmark_transform_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\largemargin_inner_product_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\log_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\loss_layer.hpp" />
@@ -107,6 +112,8 @@
     <ClInclude Include="..\..\include\caffe\layers\tanh_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\threshold_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\tile_layer.hpp" />
+    <ClInclude Include="..\..\include\caffe\layers\transform_param_layer.hpp" />
+    <ClInclude Include="..\..\include\caffe\layers\upscale_2d_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\window_data_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layer_factory.hpp" />
     <ClInclude Include="..\..\include\caffe\net.hpp" />
@@ -140,6 +147,7 @@
     <CudaCompile Include="..\..\src\caffe\layers\absval_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\accuracy_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\additive_angular_margin_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\affine_transform_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\angular_triplet_loss_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\base_data_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\batch_norm_layer.cu" />
@@ -174,6 +182,10 @@
     <CudaCompile Include="..\..\src\caffe\layers\im2col_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\inner_product_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\label_specific_add.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\landmark_image_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\landmark_init_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\landmark_pair_loss_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\landmark_transform_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\largemargin_inner_product_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\log_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\lrn_layer.cu" />
@@ -200,6 +212,8 @@
     <CudaCompile Include="..\..\src\caffe\layers\tanh_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\threshold_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\tile_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\transform_param_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\upscale_2d_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\solvers\adadelta_solver.cu" />
     <CudaCompile Include="..\..\src\caffe\solvers\adagrad_solver.cu" />
     <CudaCompile Include="..\..\src\caffe\solvers\adamw_solver.cu" />
@@ -220,6 +234,7 @@
     <ClCompile Include="..\..\src\caffe\layers\absval_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\accuracy_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\additive_angular_margin_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\affine_transform_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\angular_triplet_loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\argmax_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\base_conv_layer.cpp" />
@@ -263,6 +278,10 @@
     <ClCompile Include="..\..\src\caffe\layers\inner_product_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\input_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\label_specific_add.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\landmark_image_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\landmark_init_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\landmark_pair_loss_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\landmark_transform_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\largemargin_inner_product_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\log_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\loss_layer.cpp" />
@@ -298,6 +317,8 @@
     <ClCompile Include="..\..\src\caffe\layers\tanh_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\threshold_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\tile_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\transform_param_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\upscale_2d_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\window_data_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layer_factory.cpp" />
     <ClCompile Include="..\..\src\caffe\net.cpp" />
@@ -326,9 +347,6 @@
     <ClCompile Include="..\..\src\caffe\util\math_functions.cpp" />
     <ClCompile Include="..\..\src\caffe\util\signal_handler.cpp" />
     <ClCompile Include="..\..\src\caffe\util\upgrade_proto.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\src\caffe\proto\caffe.proto" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{48C96A9B-C1DE-4573-A6FF-E6A4EC28C37B}</ProjectGuid>

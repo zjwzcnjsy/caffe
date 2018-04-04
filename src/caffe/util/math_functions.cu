@@ -456,4 +456,37 @@ void caffe_gpu_rng_gaussian(const int n, const double mu, const double sigma,
       curandGenerateNormalDouble(Caffe::curand_generator(), r, n, mu, sigma));
 }
 
+template <typename Dtype>
+__global__ void matrix2p2_inv_kernel(const int n, const Dtype* x, Dtype* y) {
+	CUDA_KERNEL_LOOP(index, n) {
+		double det = x[0] * x[3] - x[1] * x[2];
+		if (det != 0.) {
+			det = 1. / det;
+			double t0, t1;
+			t0 = x[0] * det;
+			t1 = x[3] * det;
+			y[3] = static_cast<Dtype>(t0);
+			y[0] = static_cast<Dtype>(t1);
+			t0 = -x[1] * det;
+			t1 = -x[2] * det;
+			y[1] = static_cast<Dtype>(t0);
+			y[2] = static_cast<Dtype>(t1);
+		}
+	}
+}
+
+template <>
+void caffe_gpu_2p2_matrix_inv(const float *x, float *y) {
+	// NOLINT_NEXT_LINE(whitespace/operators)
+	matrix2p2_inv_kernel<float> << <CAFFE_GET_BLOCKS(1), CAFFE_CUDA_NUM_THREADS >> >(
+		1, x, y);
+}
+
+template <>
+void caffe_gpu_2p2_matrix_inv(const double *x, double *y) {
+	// NOLINT_NEXT_LINE(whitespace/operators)
+	matrix2p2_inv_kernel<double> << <CAFFE_GET_BLOCKS(1), CAFFE_CUDA_NUM_THREADS >> >(
+		1, x, y);
+}
+
 }  // namespace caffe

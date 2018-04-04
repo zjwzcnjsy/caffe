@@ -308,7 +308,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 157 (last added: recurrent_param)
+// LayerParameter next available layer-specific ID: 159 (last added: recurrent_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -417,6 +417,8 @@ message LayerParameter {
   optional LabelSpecificAddParameter label_specific_add_param = 154;
   optional AdditiveAngularMarginParameter additive_angular_margin_param = 155;
   optional PermuteParameter permute_param = 156;
+  optional LandmarkTransformParameter landmark_transform_param = 157;
+  optional LandmarkImageParameter landmark_image_param = 158;
 }
 
 // Message that stores parameters used to apply transformation
@@ -1348,6 +1350,17 @@ message PermuteParameter{
 	// in the same range as the input data, and it starts from 0.
 	// Do not provide repeated order.
 	repeated uint32 order = 1;
+}
+
+message LandmarkTransformParameter{
+	// whether to do inverse transform
+	optional bool inverse = 1 [default = false];
+}
+
+message LandmarkImageParameter{
+	optional uint32 image_width = 1[default = 112];
+	optional uint32 image_height = 2[default = 112];
+	optional uint32 landmark_patch_size = 3[default = 16];
 }
 
 ///////////////////////////////////////////////////////////////////////////////////

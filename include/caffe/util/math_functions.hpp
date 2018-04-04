@@ -147,6 +147,14 @@ DEFINE_CAFFE_CPU_UNARY_FUNC(max, y[i] = std::max(x[i], y[i]))
 template <typename Dtype>
 void caffe_cpu_scale(const int n, const Dtype alpha, const Dtype *x, Dtype* y);
 
+// 求2x2矩阵的逆
+template <typename Dtype>
+void caffe_2p2_matrix_inv(const Dtype *x, Dtype *y);
+
+// 求x的l2范数
+template <typename Dtype>
+Dtype caffe_l2_norm(const int n, const Dtype *x);
+
 #ifndef CPU_ONLY  // GPU
 
 // Decaf gpu gemm provides an interface that is almost the same as the cpu
@@ -278,6 +286,10 @@ void caffe_gpu_##name<double>(const int n, const double* x, double* y) { \
   name##_kernel<double><<<CAFFE_GET_BLOCKS(n), CAFFE_CUDA_NUM_THREADS>>>( \
       n, x, y); \
 }
+
+// 求2x2矩阵的逆
+template <typename Dtype>
+void caffe_gpu_2p2_matrix_inv(const Dtype *x, Dtype *y);
 
 #endif  // !CPU_ONLY
 

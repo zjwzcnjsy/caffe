@@ -382,4 +382,48 @@ void caffe_cpu_scale<double>(const int n, const double alpha, const double *x,
   cblas_dscal(n, alpha, y, 1);
 }
 
+template <>
+void caffe_2p2_matrix_inv(const float *x, float *y) {
+	double det = x[0] * x[3] - x[1] * x[2];
+	if (det != 0.) {
+		det = 1. / det;
+		double t0, t1;
+		t0 = x[0] * det;
+		t1 = x[3] * det;
+		y[3] = static_cast<float>(t0);
+		y[0] = static_cast<float>(t1);
+		t0 = -x[1] * det;
+		t1 = -x[2] * det;
+		y[1] = static_cast<float>(t0);
+		y[2] = static_cast<float>(t1);
+	}
+}
+
+template <>
+void caffe_2p2_matrix_inv(const double *x, double *y) {
+	double det = x[0] * x[3] - x[1] * x[2];
+	if (det != 0.) {
+		det = 1. / det;
+		double t0, t1;
+		t0 = x[0] * det;
+		t1 = x[3] * det;
+		y[3] = t0;
+		y[0] = t1;
+		t0 = -x[1] * det;
+		t1 = -x[2] * det;
+		y[1] = t0;
+		y[2] = t1;
+	}
+}
+
+template <>
+float caffe_l2_norm(const int n, const float *x) {
+	return sqrtf(caffe_cpu_dot(n, x, x));
+}
+
+template <>
+double caffe_l2_norm(const int n, const double *x) {
+	return sqrt(caffe_cpu_dot(n, x, x));
+}
+
 }  // namespace caffe
