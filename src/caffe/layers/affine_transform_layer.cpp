@@ -21,39 +21,44 @@ Dtype clip(const Dtype x, const Dtype min_v, const Dtype max_v) {
 template <typename Dtype>
 void affine_transform(const int height, const int width, const Dtype* img, 
 	const int out_height, const int out_width, Dtype* out_img, Dtype *T) {
-	caffe_2p2_matrix_inv(T, T);
-	Dtype *A = T;
-	Dtype *t = T + 4;
-	Dtype t0 = t[0];
-	Dtype t1 = t[1];
+	double T2[6];
+	for (size_t i = 0; i < 6; i++)
+	{
+		T2[i] = static_cast<double>(T[i]);
+	}
+	caffe_2p2_matrix_inv<double>(T2, T2);
+	double *A = T2;
+	double *t = T2 + 4;
+	double t0 = t[0];
+	double t1 = t[1];
 	t[0] = -(t0 * A[0] + t1 * A[2]);
 	t[1] = -(t0 * A[1] + t1 * A[3]);
 
-	Dtype *pixels = new Dtype[out_height*out_width * 2];
-	Dtype *outPixels = new Dtype[out_height*out_width * 2];
+	double *pixels = new double[out_height*out_width * 2];
+	double *outPixels = new double[out_height*out_width * 2];
 	int idxCount = 0;
 	for (int i = 0; i < out_width; ++i) {
 		for (int j = 0; j < out_height; ++j) {
-			pixels[idxCount] = static_cast<Dtype>(i);
-			pixels[idxCount + 1] = static_cast<Dtype>(j);
+			pixels[idxCount] = static_cast<double>(i);
+			pixels[idxCount + 1] = static_cast<double>(j);
 			outPixels[idxCount] = t[0];
 			outPixels[idxCount + 1] = t[1];
 			idxCount += 2;
 		}
 	}
-	caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans,
-		out_height*out_width, 2, 2, (Dtype)1.,
-		pixels, A, (Dtype)1., outPixels);
+	caffe_cpu_gemm<double>(CblasNoTrans, CblasNoTrans,
+		out_height*out_width, 2, 2, 1.,
+		pixels, A, 1., outPixels);
 	idxCount = 0;
 	int outPixelsMinMin_x, outPixelsMinMin_y;
 	int outPixelsMaxMin_x, outPixelsMaxMin_y;
 	int outPixelsMinMax_x, outPixelsMinMax_y;
 	int outPixelsMaxMax_x, outPixelsMaxMax_y;
-	Dtype dx, dy;
+	double dx, dy;
 	for (int i = 0; i < out_width; ++i) {
 		for (int j = 0; j < out_height; ++j) {
-			outPixels[idxCount] = clip<Dtype>(outPixels[idxCount], 0, width - 2);
-			outPixels[idxCount + 1] = clip<Dtype>(outPixels[idxCount + 1], 0, height - 2);
+			outPixels[idxCount] = clip<double>(outPixels[idxCount], 0, width - 2);
+			outPixels[idxCount + 1] = clip<double>(outPixels[idxCount + 1], 0, height - 2);
 			
 			outPixelsMinMin_x = static_cast<int>(outPixels[idxCount]);
 			outPixelsMinMin_y = static_cast<int>(outPixels[idxCount + 1]);
@@ -107,18 +112,16 @@ void AffineTransformLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void AffineTransformLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
-  const int spatial_dim = bottom[0]->count(2);
+  const int spatial_dim = channels_ * height_ * width_;
   const Dtype* bottom_data = bottom[0]->cpu_data();
   caffe_copy(bottom[1]->count(), bottom[1]->cpu_data(), tmp_transform_param_.mutable_cpu_data());
   Dtype* transform_param_data = tmp_transform_param_.mutable_cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
   for (int i = 0; i < num_; ++i) {
-	  for (int j = 0; j < channels_; ++j) {
-		  affine_transform<Dtype>(height_, width_, bottom_data, out_img_height_, out_img_width_, top_data, transform_param_data);
-		  transform_param_data += 6;
-		  bottom_data += spatial_dim;
-		  top_data += spatial_dim;
-	  }
+		affine_transform<Dtype>(height_, width_, bottom_data, out_img_height_, out_img_width_, top_data, transform_param_data);
+		transform_param_data += 6;
+		bottom_data += spatial_dim;
+		top_data += spatial_dim;
   }
 }
 

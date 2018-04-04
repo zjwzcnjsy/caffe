@@ -61,12 +61,14 @@ void LandmarkImageLayer<Dtype>::Forward_gpu(
 	const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
 	const int spatial_dim = img_width_ * img_height_;
 	const int landmark_dim = bottom[0]->count(1);
+	const int tmp_landmark_image_dim = num_landmark_ * img_height_ *img_width_;
 	const Dtype* bottom_data = bottom[0]->cpu_data();
 	Dtype* top_data = top[0]->mutable_cpu_data();
+	caffe_set(tmp_landmark_images_.count(), Dtype(0), tmp_landmark_images_.mutable_cpu_data());
 	caffe_set(top[0]->count(), Dtype(0), top_data);
 	for (int i = 0; i < bottom[0]->num(); ++i) {
 		gen_landmark_image<Dtype>(num_landmark_, bottom_data, img_height_, img_width_, landmark_patch_size_,
-			tmp_landmark_images_.mutable_cpu_data(), top_data);
+			tmp_landmark_images_.mutable_cpu_data() + i * tmp_landmark_image_dim, top_data);
 		bottom_data += landmark_dim;
 		top_data += spatial_dim;
 	}
