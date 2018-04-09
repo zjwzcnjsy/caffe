@@ -94,6 +94,7 @@ void LandmarkPairLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 		  caffe_div(num_landmark_, tmp_diff_data, tmp_dist_data, bottom_diff);
 		  caffe_div(num_landmark_, tmp_diff_data + num_landmark_, tmp_dist_data, bottom_diff + num_landmark_);
 		  caffe_scal(landmark_dim, alpha, bottom_diff);
+		  tmp_diff_data += landmark_dim;
 		  tmp_dist_data += num_landmark_;
 		  bottom_diff += landmark_dim;
 	  }

@@ -96,6 +96,7 @@ void LandmarkPairLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 			caffe_gpu_div(num_landmark_, tmp_diff_data, tmp_dist_data, bottom_diff);
 			caffe_gpu_div(num_landmark_, tmp_diff_data + num_landmark_, tmp_dist_data, bottom_diff + num_landmark_);
 			caffe_gpu_scal(landmark_dim, alpha, bottom_diff);
+			tmp_diff_data += landmark_dim;
 			tmp_dist_data += num_landmark_;
 			bottom_diff += landmark_dim;
 		}
