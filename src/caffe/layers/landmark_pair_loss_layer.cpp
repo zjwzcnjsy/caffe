@@ -29,6 +29,7 @@ namespace caffe {
 template <typename Dtype>
 void LandmarkPairLossLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+  LossLayer<Dtype>::LayerSetUp(bottom, top);
   CHECK_EQ(bottom[0]->num(), bottom[1]->num()) << "the number of shape miss match.";
   CHECK_EQ(bottom[0]->channels(), bottom[1]->channels()) << "the number of landmark miss match.";
   num_landmark_ = bottom[0]->channels() / 2;
