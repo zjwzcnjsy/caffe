@@ -122,7 +122,7 @@ def main():
     remove_list = []
     i = 0
     while i < len(net_layers):
-        if net.layer[i].type == 'Convolution':
+        if net.layer[i].type in ['Convolution', 'ConvolutionDepthwise', 'InnerProduct']:
             conv_param = net.layer[i].convolution_param
             conv_name = net.layer[i].name
             conv_layer = get_layer(weight, conv_name)
