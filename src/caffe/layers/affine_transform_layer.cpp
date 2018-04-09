@@ -116,6 +116,7 @@ void AffineTransformLayer<Dtype>::Forward_cpu(
   const Dtype* bottom_data = bottom[0]->cpu_data();
   caffe_copy(bottom[1]->count(), bottom[1]->cpu_data(), tmp_transform_param_.mutable_cpu_data());
   Dtype* transform_param_data = tmp_transform_param_.mutable_cpu_data();
+  caffe_set(top[0]->count(), Dtype(0), top[0]->mutable_cpu_data());
   Dtype* top_data = top[0]->mutable_cpu_data();
   for (int i = 0; i < num_; ++i) {
 		affine_transform<Dtype>(height_, width_, bottom_data, out_img_height_, out_img_width_, top_data, transform_param_data);

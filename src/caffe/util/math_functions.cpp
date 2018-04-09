@@ -385,7 +385,7 @@ void caffe_cpu_scale<double>(const int n, const double alpha, const double *x,
 template <>
 void caffe_2p2_matrix_inv(const float *x, float *y) {
 	double det = x[0] * x[3] - x[1] * x[2];
-	if (det != 0.) {
+	if (abs(det) > 1e-5) {
 		det = 1. / det;
 		double t0, t1;
 		t0 = x[0] * det;
@@ -402,7 +402,7 @@ void caffe_2p2_matrix_inv(const float *x, float *y) {
 template <>
 void caffe_2p2_matrix_inv(const double *x, double *y) {
 	double det = x[0] * x[3] - x[1] * x[2];
-	if (det != 0.) {
+	if (abs(det) > 1e-5) {
 		det = 1. / det;
 		double t0, t1;
 		t0 = x[0] * det;

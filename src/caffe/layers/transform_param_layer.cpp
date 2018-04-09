@@ -75,7 +75,7 @@ template <typename Dtype>
 void TransformParamLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   const int num = bottom[0]->num();
-  const int dim = bottom[0]->count(1);
+  const int dim = bottom[0]->channels();
   const Dtype* bottom_data = bottom[0]->cpu_data();
   const Dtype* mean_shape_data = bottom[1]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();

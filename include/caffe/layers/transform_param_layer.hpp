@@ -9,6 +9,9 @@
 
 namespace caffe {
 
+template <typename Dtype>
+void bestFit(const int num_landmark, const Dtype* dest, const Dtype* src, Dtype *transformed_src, Dtype *T);
+
 /**
  * @brief DAN网络中求当前形状变换到初始形状的变换参数。
  *
