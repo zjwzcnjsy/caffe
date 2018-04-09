@@ -24,7 +24,7 @@ template <typename Dtype>
 void LandmarkInitLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
 	if (propagate_down[0]) {
-		caffe_gpu_memcpy(bottom[0]->count(), top[0]->gpu_diff(), bottom[0]->mutable_gpu_diff());
+		caffe_copy(bottom[0]->count(), top[0]->gpu_diff(), bottom[0]->mutable_gpu_diff());
 	}
 }
 
