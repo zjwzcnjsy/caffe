@@ -1363,6 +1363,7 @@ message LandmarkImageParameter{
 	optional uint32 landmark_patch_size = 3[default = 16];
 }
 
+
 ///////////////////////////////////////////////////////////////////////////////////
 // DEPRECATED: use LayerParameter.
 message V1LayerParameter {

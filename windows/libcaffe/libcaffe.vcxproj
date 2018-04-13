@@ -96,6 +96,7 @@
     <ClInclude Include="..\..\include\caffe\layers\python_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\recurrent_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\reduction_layer.hpp" />
+    <ClInclude Include="..\..\include\caffe\layers\relu6_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\relu_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\reshape_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\rnn_layer.hpp" />
@@ -199,6 +200,7 @@
     <CudaCompile Include="..\..\src\caffe\layers\prelu_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\recurrent_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\reduction_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\relu6_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\relu_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\scale_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\shuffle_channel_layer.cu" />
@@ -301,6 +303,7 @@
     <ClCompile Include="..\..\src\caffe\layers\prelu_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\recurrent_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\reduction_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\relu6_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\relu_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\reshape_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\rnn_layer.cpp" />
