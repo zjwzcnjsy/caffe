@@ -37,6 +37,8 @@
     <ClInclude Include="..\..\include\caffe\layers\batch_norm_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\batch_reindex_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\bias_layer.hpp" />
+    <ClInclude Include="..\..\include\caffe\layers\binary_active_layer.hpp" />
+    <ClInclude Include="..\..\include\caffe\layers\binary_conv_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\bnll_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\center_loss_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\concat_layer.hpp" />
@@ -154,6 +156,8 @@
     <CudaCompile Include="..\..\src\caffe\layers\batch_norm_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\batch_reindex_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\bias_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\binary_active_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\binary_conv_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\bnll_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\center_loss_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\concat_layer.cu" />
@@ -244,6 +248,8 @@
     <ClCompile Include="..\..\src\caffe\layers\batch_norm_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\batch_reindex_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\bias_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\binary_active_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\binary_conv_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\bnll_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\center_loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\concat_layer.cpp" />
