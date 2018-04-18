@@ -18,11 +18,11 @@ namespace caffe {
 	__global__ void calc_A(const int nThreads, const int kernel_dim,
 		const Dtype* w, Dtype* A) {
 		CUDA_KERNEL_LOOP(index, nThreads) {
-			A[index] = Dtype(0.0);
+			Dtype sum = Dtype(0.0);
 			for (int i = 0; i < kernel_dim; ++i) {
-				A[index] += std::abs(w[index*kernel_dim + i]);
+				sum += std::abs(w[index*kernel_dim + i]);
 			}
-			A[index] /= static_cast<Dtype>(kernel_dim);
+			A[index] = sum / static_cast<Dtype>(kernel_dim);
 		}
 	}
 
@@ -34,11 +34,11 @@ namespace caffe {
 			const int w = index % width;
 			const int h = (index / width) % height;
 			const int n = index / width / height;
-			center[(n*height + h)*width + w] = Dtype(0.);
+			Dtype sum = Dtype(0.0);
 			for (int c = 0; c < channels; ++c) {
-				center[(n*height + h)*width + w] += weights[((n*channels + c)*height + h)*width + w];
+				sum += weights[((n*channels + c)*height + h)*width + w];
 			}
-			center[(n*height + h)*width + w] /= static_cast<Dtype>(channels);
+			center[(n*height + h)*width + w] = sum / static_cast<Dtype>(channels);
 		}
 	}
 
@@ -131,11 +131,11 @@ namespace caffe {
 	__global__ void A_backwark_kernel(const int nThreads, const int kernel_dim,
 		const Dtype* w_sign, const Dtype* w_hat_grad, Dtype* A_grad) {
 		CUDA_KERNEL_LOOP(index, nThreads) {
-			A_grad[index] = Dtype(0.);
+			Dtype sum = Dtype(0.);
 			for (int i = 0; i < kernel_dim; ++i) {
-				A_grad[index] += w_sign[index*kernel_dim + i] * w_hat_grad[index*kernel_dim + i];
+				sum += w_sign[index*kernel_dim + i] * w_hat_grad[index*kernel_dim + i];
 			}
-			A_grad[index] /= static_cast<Dtype>(kernel_dim);
+			A_grad[index] = sum / static_cast<Dtype>(kernel_dim);
 		}
 	}
 
