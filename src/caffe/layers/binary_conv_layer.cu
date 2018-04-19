@@ -82,26 +82,49 @@ namespace caffe {
 	template <typename Dtype>
 	void BinaryConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 		const vector<Blob<Dtype>*>& top) {
-		// mean center
-		const int count = this->blobs_[0]->count();
-		const int num = this->blobs_[0]->num();
-		const int channels = this->blobs_[0]->channels();
-		const int height = this->blobs_[0]->height();
-		const int width = this->blobs_[0]->width();
-		// compute mean
-		calc_meancenter<Dtype> << <CAFFE_GET_BLOCKS(count / channels), CAFFE_CUDA_NUM_THREADS >> >(
-			count / channels, num, channels, height, width,
-			this->blobs_[0]->gpu_data(), meancenter_.mutable_gpu_data());
-		// subtract mean and clip weight to [-1,1]
-		meancenter_remove_and_clamp<Dtype> << <CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS >> >(
-			count, num, channels, height, width,
-			meancenter_.gpu_data(), this->blobs_[0]->mutable_gpu_data(), Dtype(-1.0), Dtype(1.0));
-		// binary weight, binary_w_'s data hold A*sign(w), binary_w_'s diff hold sign(w)
-		binarizeGPUTo(&(*this->blobs_[0]), &binary_w_);
-		// store weight to buffer
-		caffe_copy(count, this->blobs_[0]->gpu_data(), w_buffer_.mutable_gpu_data());
-		// copy binary weight to weight
-		caffe_copy(count, binary_w_.gpu_data(), this->blobs_[0]->mutable_gpu_data());
+		if (this->phase_ == TRAIN) {
+			const int count = this->blobs_[0]->count();
+			const int num = this->blobs_[0]->num();
+			const int channels = this->blobs_[0]->channels();
+			const int height = this->blobs_[0]->height();
+			const int width = this->blobs_[0]->width();
+			// compute mean
+			calc_meancenter<Dtype> << <CAFFE_GET_BLOCKS(count / channels), CAFFE_CUDA_NUM_THREADS >> >(
+				count / channels, num, channels, height, width,
+				this->blobs_[0]->gpu_data(), meancenter_.mutable_gpu_data());
+			// subtract mean and clip weight to [-1,1]
+			meancenter_remove_and_clamp<Dtype> << <CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS >> >(
+				count, num, channels, height, width,
+				meancenter_.gpu_data(), this->blobs_[0]->mutable_gpu_data(), Dtype(-1.0), Dtype(1.0));
+			// binary weight, binary_w_'s data hold A*sign(w), binary_w_'s diff hold sign(w)
+			binarizeGPUTo(&(*this->blobs_[0]), &binary_w_);
+			// store weight to buffer
+			caffe_copy(count, this->blobs_[0]->gpu_data(), w_buffer_.mutable_gpu_data());
+			// copy binary weight to weight
+			caffe_copy(count, binary_w_.gpu_data(), this->blobs_[0]->mutable_gpu_data());
+		}
+		else {
+			const int count = this->blobs_[0]->count();
+			// store weight to buffer
+			caffe_copy(count, this->blobs_[0]->gpu_data(), w_buffer_.mutable_gpu_data());
+
+			const int num = this->blobs_[0]->num();
+			const int channels = this->blobs_[0]->channels();
+			const int height = this->blobs_[0]->height();
+			const int width = this->blobs_[0]->width();
+			// compute mean
+			calc_meancenter<Dtype> << <CAFFE_GET_BLOCKS(count / channels), CAFFE_CUDA_NUM_THREADS >> >(
+				count / channels, num, channels, height, width,
+				this->blobs_[0]->gpu_data(), meancenter_.mutable_gpu_data());
+			// subtract mean and clip weight to [-1,1]
+			meancenter_remove_and_clamp<Dtype> << <CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS >> >(
+				count, num, channels, height, width,
+				meancenter_.gpu_data(), this->blobs_[0]->mutable_gpu_data(), Dtype(-1.0), Dtype(1.0));
+			// binary weight, binary_w_'s data hold A*sign(w), binary_w_'s diff hold sign(w)
+			binarizeGPUTo(&(*this->blobs_[0]), &binary_w_);
+			// copy binary weight to weight
+			caffe_copy(count, binary_w_.gpu_data(), this->blobs_[0]->mutable_gpu_data());
+		}
 
 		const Dtype* weight = this->blobs_[0]->gpu_data();
 		for (int i = 0; i < bottom.size(); ++i) {
@@ -172,20 +195,28 @@ namespace caffe {
 				}
 			}
 		}
-		const int count = this->blobs_[0]->count();
-		const int num = this->blobs_[0]->num();
-		const int channels = this->blobs_[0]->channels();
-		const int kernel_dim = this->blobs_[0]->count(1);
-		// restore weight
-		caffe_copy(count, w_buffer_.gpu_data(), this->blobs_[0]->mutable_gpu_data());
-		// compute A grad
-		A_backwark_kernel<Dtype> << <CAFFE_GET_BLOCKS(num), CAFFE_CUDA_NUM_THREADS >> >(
-			num, kernel_dim, binary_w_.gpu_diff(), this->blobs_[0]->gpu_diff(), A_.mutable_gpu_diff());
-		// compute w grad
-		w_backwark_kernel<Dtype> << <CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS >> >(
-			count, channels, kernel_dim,
-			this->blobs_[0]->gpu_data(), binary_w_.gpu_diff(), this->blobs_[0]->gpu_diff(),
-			A_.gpu_data(), A_.gpu_diff(), this->blobs_[0]->mutable_gpu_diff());
+
+		if (this->phase_ == TRAIN) {
+			const int count = this->blobs_[0]->count();
+			const int num = this->blobs_[0]->num();
+			const int channels = this->blobs_[0]->channels();
+			const int kernel_dim = this->blobs_[0]->count(1);
+			// restore weight
+			caffe_copy(count, w_buffer_.gpu_data(), this->blobs_[0]->mutable_gpu_data());
+			// compute A grad
+			A_backwark_kernel<Dtype> << <CAFFE_GET_BLOCKS(num), CAFFE_CUDA_NUM_THREADS >> >(
+				num, kernel_dim, binary_w_.gpu_diff(), this->blobs_[0]->gpu_diff(), A_.mutable_gpu_diff());
+			// compute w grad
+			w_backwark_kernel<Dtype> << <CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS >> >(
+				count, channels, kernel_dim,
+				this->blobs_[0]->gpu_data(), binary_w_.gpu_diff(), this->blobs_[0]->gpu_diff(),
+				A_.gpu_data(), A_.gpu_diff(), this->blobs_[0]->mutable_gpu_diff());
+		}
+		else {
+			const int count = this->blobs_[0]->count();
+			// restore weight
+			caffe_copy(count, w_buffer_.gpu_data(), this->blobs_[0]->mutable_gpu_data());
+		}
 	}
 
 	template void BinaryConvolutionLayer<float>::binarizeGPUTo(const Blob<float>* weights, Blob<float>* wb);
