@@ -43,32 +43,26 @@ namespace caffe {
 	}
 
 	template <typename Dtype>
-	__global__ void sub_meancenter(const int nThreads,
+	__global__ void meancenter_remove_and_clamp(const int nThreads,
 		const int num, const int channels, const int height, const int width,
-		const Dtype* center, Dtype* weights) {
+		const Dtype* center, Dtype* weights, const Dtype minv, const Dtype maxv) {
 		CUDA_KERNEL_LOOP(index, nThreads) {
 			const int w = index % width;
 			const int h = (index / width) % height;
 			const int n = index / width / height / channels;
-			weights[index] -= center[(n*height + h)*width + w];
-		}
-	}
-
-	template <typename Dtype>
-	__global__ void clamp_kernel(const int nThreads, Dtype* out_w, const Dtype minv, const Dtype maxv) {
-		CUDA_KERNEL_LOOP(index, nThreads) {
-			if (out_w[index] < minv) {
-				out_w[index] = minv;
+			Dtype v = weights[index] - center[(n*height + h)*width + w];
+			if (v < minv) {
+				v = minv;
 			}
-			else if (out_w[index] > maxv) {
-				out_w[index] = maxv;
+			else if (v > maxv) {
+				v = maxv;
 			}
 			else {
 				//nothing to do;
 			}
+			weights[index] = v;
 		}
 	}
-
 
 	template <typename Dtype>
 	void BinaryConvolutionLayer<Dtype>::binarizeGPUTo(const Blob<Dtype>* weights, Blob<Dtype>* wb) {
@@ -98,13 +92,10 @@ namespace caffe {
 		calc_meancenter<Dtype> << <CAFFE_GET_BLOCKS(count / channels), CAFFE_CUDA_NUM_THREADS >> >(
 			count / channels, num, channels, height, width,
 			this->blobs_[0]->gpu_data(), meancenter_.mutable_gpu_data());
-		// subtract mean
-		sub_meancenter<Dtype> << <CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS >> >(
+		// subtract mean and clip weight to [-1,1]
+		meancenter_remove_and_clamp<Dtype> << <CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS >> >(
 			count, num, channels, height, width,
-			meancenter_.gpu_data(), this->blobs_[0]->mutable_gpu_data());
-		// clip weight to [-1,1]
-		clamp_kernel<Dtype> << <CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS >> >(
-			count, this->blobs_[0]->mutable_gpu_data(), Dtype(-1.0), Dtype(1.0));
+			meancenter_.gpu_data(), this->blobs_[0]->mutable_gpu_data(), Dtype(-1.0), Dtype(1.0));
 		// binary weight, binary_w_'s data hold A*sign(w), binary_w_'s diff hold sign(w)
 		binarizeGPUTo(&(*this->blobs_[0]), &binary_w_);
 		// store weight to buffer

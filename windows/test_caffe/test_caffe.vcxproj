@@ -178,6 +178,7 @@
     <ClCompile Include="..\..\src\caffe\test\test_batch_reindex_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_benchmark.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_bias_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\test\test_binary_active_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_blob.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_caffe_main.cpp" />
     <ClCompile Include="..\..\src\caffe\test\test_common.cpp" />

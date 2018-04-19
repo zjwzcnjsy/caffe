@@ -5,6 +5,50 @@
 namespace caffe {
 
 template <typename Dtype>
+void calc_meancenter(const int num, const int channels, const int height, const int width,
+	const Dtype* weights, Dtype* center)
+{
+	for (int n = 0; n < num; ++n) {
+		for (int h = 0; h < height; ++h) {
+			for (int w = 0; w < width; ++w) {
+				Dtype sum = Dtype(0.);
+				for (int c = 0; c < channels; ++c) {
+					sum += weights[((n*channels + c)*height + h)*width + w];
+				}
+				center[(n*height + h)*width + w] = sum / static_cast<Dtype>(channels);
+			}
+		}
+	}
+}
+
+template <typename Dtype>
+void meancenter_remove_and_clamp(const int num, const int channels, const int height, const int width,
+	Dtype* weights, const Dtype* center, const Dtype minv=Dtype(-1.), const Dtype maxv = Dtype(-1.))
+{
+	for (int n = 0; n < num; ++n) {
+		for (int c = 0; c < channels; ++c) {
+			for (int h = 0; h < height; ++h) {
+				for (int w = 0; w < width; ++w) {
+					for (int c = 0; c < channels; ++c) {
+						Dtype v = weights[((n*channels + c)*height + h)*width + w] - center[(n*height + h)*width + w];
+						if (v < minv) {
+							v = minv;
+						}
+						else if (v > maxv) {
+							v = maxv;
+						}
+						else {
+							//nothing to do;
+						}
+						weights[((n*channels + c)*height + h)*width + w] = v;
+					}
+				}
+			}
+		}
+	}
+}
+
+template <typename Dtype>
 void BinaryConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   BaseConvolutionLayer<Dtype>::LayerSetUp(bottom, top);
@@ -15,7 +59,6 @@ void BinaryConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& botto
   meancenter_.Reshape(meancenter_shape);
   vector<int> A_shape(1, this->blobs_[0]->num());
   A_.Reshape(A_shape);
-
 }
 
 template <typename Dtype>
@@ -38,9 +81,21 @@ void BinaryConvolutionLayer<Dtype>::compute_output_shape() {
 template <typename Dtype>
 void BinaryConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  // binary weight
+	const int count = this->blobs_[0]->count();
+	const int num = this->blobs_[0]->num();
+	const int channels = this->blobs_[0]->channels();
+	const int height = this->blobs_[0]->height();
+	const int width = this->blobs_[0]->width();
+	// compute mean
+	calc_meancenter(num, channels, height, width,
+		this->blobs_[0]->cpu_data(), meancenter_.mutable_cpu_data());
+	// subtract mean and clip weight to [-1,1]
+	meancenter_remove_and_clamp(num, channels, height, width,
+		this->blobs_[0]->mutable_cpu_data(), meancenter_.cpu_data(), Dtype(-1.0), Dtype(1.0));
+	
+	// binary weight, binary_w_'s data hold A*sign(w), binary_w_'s diff hold sign(w)
   binarizeCPUTo(&(*this->blobs_[0]), &binary_w_);
-  // store weight to buffer
+	// store weight to buffer
   caffe_copy(this->blobs_[0]->count(), this->blobs_[0]->cpu_data(), w_buffer_.mutable_cpu_data());
   // copy binary weight to weight
   caffe_copy(binary_w_.count(), binary_w_.cpu_data(), this->blobs_[0]->mutable_cpu_data());
@@ -58,6 +113,25 @@ void BinaryConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bott
       }
     }
   }
+}
+
+template <typename Dtype>
+void calc_A_grad(const int num, const int kernel_dim,
+	const Dtype* w_sign, const Dtype* w_hat_grad, Dtype* A_grad) {
+	for (int n = 0; n < num; ++n) {
+		A_grad[n] = caffe_cpu_dot(kernel_dim, w_sign + n*kernel_dim, w_hat_grad + n*kernel_dim) / static_cast<Dtype>(kernel_dim);
+	}
+}
+
+template <typename Dtype>
+void calc_w_grad(const int count, const int channels, const int kernel_dim,
+	const Dtype* w, const Dtype* w_sign, const Dtype* w_hat_grad,
+	const Dtype* A, const Dtype* A_grad, Dtype* w_grad) {
+	for (int i = 0; i < count; ++i) {
+		int num = i / kernel_dim;
+		w_grad[i] = (w_sign[i] * A_grad[num] + w_hat_grad[i] * A[num] * (w[i] <= Dtype(1.) && w[i] >= Dtype(-1.)))
+			* (Dtype(1.) - Dtype(1.) / static_cast<Dtype>(channels))*kernel_dim*Dtype(1e+9);
+	}
 }
 
 template <typename Dtype>
@@ -91,9 +165,18 @@ void BinaryConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
       }
     }
   }
-  // restore weight
-  caffe_copy(w_buffer_.count(), w_buffer_.cpu_data(), this->blobs_[0]->mutable_cpu_data());
-  // TODO: compute w grad
+	const int count = this->blobs_[0]->count();
+	const int num = this->blobs_[0]->num();
+	const int channels = this->blobs_[0]->channels();
+	const int kernel_dim = this->blobs_[0]->count(1);
+	// restore weight
+	caffe_copy(count, w_buffer_.cpu_data(), this->blobs_[0]->mutable_cpu_data());
+	// compute A grad
+	calc_A_grad(num, kernel_dim, binary_w_.cpu_diff(), this->blobs_[0]->cpu_diff(), A_.mutable_cpu_diff());
+	// compute w grad
+	calc_w_grad(count, channels, kernel_dim,
+		this->blobs_[0]->cpu_data(), binary_w_.cpu_diff(), this->blobs_[0]->cpu_diff(),
+		A_.cpu_data(), A_.cpu_diff(), this->blobs_[0]->mutable_cpu_diff());
 }
 
 template <typename Dtype>
