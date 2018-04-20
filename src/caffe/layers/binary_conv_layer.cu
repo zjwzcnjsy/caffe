@@ -139,6 +139,11 @@ namespace caffe {
 				}
 			}
 		}
+		if (this->phase_ == TEST) {
+			const int count = this->blobs_[0]->count();
+			// restore weight
+			caffe_copy(count, binary_w_.gpu_data(), this->blobs_[0]->mutable_gpu_data());
+		}
 	}
 
 	template <typename Dtype>
@@ -211,11 +216,6 @@ namespace caffe {
 				count, channels, kernel_dim,
 				this->blobs_[0]->gpu_data(), binary_w_.gpu_diff(), this->blobs_[0]->gpu_diff(),
 				A_.gpu_data(), A_.gpu_diff(), this->blobs_[0]->mutable_gpu_diff());
-		}
-		else {
-			const int count = this->blobs_[0]->count();
-			// restore weight
-			caffe_copy(count, w_buffer_.gpu_data(), this->blobs_[0]->mutable_gpu_data());
 		}
 	}
 

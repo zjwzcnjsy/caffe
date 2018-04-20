@@ -139,6 +139,11 @@ void BinaryConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bott
       }
     }
   }
+	if (this->phase_ == TEST) {
+		const int count = this->blobs_[0]->count();
+		// restore weight
+		caffe_copy(count, w_buffer_.cpu_data(), this->blobs_[0]->mutable_cpu_data());
+	}
 }
 
 template <typename Dtype>
@@ -204,11 +209,6 @@ void BinaryConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
 		calc_w_grad(count, channels, kernel_dim,
 			this->blobs_[0]->cpu_data(), binary_w_.cpu_diff(), this->blobs_[0]->cpu_diff(),
 			A_.cpu_data(), A_.cpu_diff(), this->blobs_[0]->mutable_cpu_diff());
-	}
-	else {
-		const int count = this->blobs_[0]->count();
-		// restore weight
-		caffe_copy(count, w_buffer_.cpu_data(), this->blobs_[0]->mutable_cpu_data());
 	}
 }
 
