@@ -159,13 +159,30 @@ namespace caffe {
 	}
 
 	template <typename Dtype>
-	__global__ void w_backwark_kernel(const int nThreads, const int channels, const int kernel_dim,
-		const Dtype* w, const Dtype* w_sign, const Dtype* w_hat_grad,
-		const Dtype* A, const Dtype* A_grad, Dtype* w_grad) {
+	__global__ void meancenter_backwark_kernel(const int nThreads, const int num, const int channels, const int height, const int width,
+		const Dtype* w_hat_grad, Dtype* meancenter_grad) {
 		CUDA_KERNEL_LOOP(index, nThreads) {
-			int num = index / kernel_dim;
-			w_grad[index] = (w_sign[index] * A_grad[num] + w_hat_grad[index] * A[num] * (w[index] <= Dtype(1.) && w[index] >= Dtype(-1.)))
-				* (Dtype(1.) - Dtype(1.) / static_cast<Dtype>(channels))*kernel_dim*Dtype(1e+9);
+			const int w = index % width;
+			const int h = (index / width) % height;
+			const int n = index / width / height;
+			Dtype sum = Dtype(0.0);
+			for (int c = 0; c < channels; ++c) {
+				sum += w_hat_grad[((n*channels + c)*height + h)*width + w];
+			}
+			meancenter_grad[(n*height + h)*width + w] = sum / static_cast<Dtype>(channels);
+		}
+	}
+
+	template <typename Dtype>
+	__global__ void w_backwark_kernel(const int nThreads, const int num, const int channels, const int height, const int width,
+		const Dtype* w, const Dtype* w_sign, const Dtype* w_hat_grad,
+		const Dtype* A, const Dtype* A_grad, const Dtype* meancenter_grad, Dtype* w_grad) {
+		CUDA_KERNEL_LOOP(index, nThreads) {
+			const int w1 = index % width;
+			const int h = (index / width) % height;
+			const int n = index / width / height / channels;
+			w_grad[index] = (w_sign[index] * A_grad[n] + w_hat_grad[index] * A[n] * (w[index] <= Dtype(1.) && w[index] >= Dtype(-1.)))
+				* (Dtype(1.) - meancenter_grad[(n*height+h)*width+w1]);
 		}
 	}
 
@@ -205,17 +222,23 @@ namespace caffe {
 			const int count = this->blobs_[0]->count();
 			const int num = this->blobs_[0]->num();
 			const int channels = this->blobs_[0]->channels();
+			const int height = this->blobs_[0]->height();
+			const int width = this->blobs_[0]->width();
 			const int kernel_dim = this->blobs_[0]->count(1);
 			// restore weight
 			caffe_copy(count, w_buffer_.gpu_data(), this->blobs_[0]->mutable_gpu_data());
 			// compute A grad
 			A_backwark_kernel<Dtype> << <CAFFE_GET_BLOCKS(num), CAFFE_CUDA_NUM_THREADS >> >(
 				num, kernel_dim, binary_w_.gpu_diff(), this->blobs_[0]->gpu_diff(), A_.mutable_gpu_diff());
+			// compute meancenter grad
+			meancenter_backwark_kernel<Dtype> << <CAFFE_GET_BLOCKS(num*channels*height*width), CAFFE_CUDA_NUM_THREADS >> >(
+				num*channels*height*width, num, channels, height, width, 
+				this->blobs_[0]->gpu_diff(), meancenter_.mutable_gpu_diff());
 			// compute w grad
 			w_backwark_kernel<Dtype> << <CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS >> >(
-				count, channels, kernel_dim,
+				count, num, channels, height, width,
 				this->blobs_[0]->gpu_data(), binary_w_.gpu_diff(), this->blobs_[0]->gpu_diff(),
-				A_.gpu_data(), A_.gpu_diff(), this->blobs_[0]->mutable_gpu_diff());
+				A_.gpu_data(), A_.gpu_diff(), meancenter_.gpu_diff(), this->blobs_[0]->mutable_gpu_diff());
 		}
 	}
 
