@@ -231,8 +231,8 @@ namespace caffe {
 			A_backwark_kernel<Dtype> << <CAFFE_GET_BLOCKS(num), CAFFE_CUDA_NUM_THREADS >> >(
 				num, kernel_dim, binary_w_.gpu_diff(), this->blobs_[0]->gpu_diff(), A_.mutable_gpu_diff());
 			// compute meancenter grad
-			meancenter_backwark_kernel<Dtype> << <CAFFE_GET_BLOCKS(num*channels*height*width), CAFFE_CUDA_NUM_THREADS >> >(
-				num*channels*height*width, num, channels, height, width, 
+			meancenter_backwark_kernel<Dtype> << <CAFFE_GET_BLOCKS(num*height*width), CAFFE_CUDA_NUM_THREADS >> >(
+				num*height*width, num, channels, height, width, 
 				this->blobs_[0]->gpu_diff(), meancenter_.mutable_gpu_diff());
 			// compute w grad
 			w_backwark_kernel<Dtype> << <CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS >> >(
