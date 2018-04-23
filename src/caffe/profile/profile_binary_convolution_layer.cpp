@@ -10,7 +10,7 @@ template <typename Dtype>
 class BinaryConvolutionLayerProfile {
  public:
 	 BinaryConvolutionLayerProfile()
-      : blob_bottom_(new Blob<Dtype>(1, 96, 27, 27)),
+      : blob_bottom_(new Blob<Dtype>(1, 4096, 1, 1)),
         blob_top_(new Blob<Dtype>()) {}
   
 	 virtual void SetUp() {
@@ -46,10 +46,10 @@ void BinaryConvolutionLayerProfile<Dtype>::ProfileSimpleBinaryConvolutionWithTes
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
 	convolution_param->set_bias_term(false);
-  convolution_param->add_kernel_size(5);
+  convolution_param->add_kernel_size(1);
   convolution_param->add_stride(1);
-	convolution_param->add_pad(2);
-  convolution_param->set_num_output(256);
+	convolution_param->add_pad(0);
+  convolution_param->set_num_output(4096);
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("constant");
   convolution_param->mutable_bias_filler()->set_value(0.1);
@@ -58,7 +58,7 @@ void BinaryConvolutionLayerProfile<Dtype>::ProfileSimpleBinaryConvolutionWithTes
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 	layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
 	vector<bool> propagate_down(1, true);
-	layer->Backward(this->blob_bottom_vec_, propagate_down, this->blob_top_vec_);
+	layer->Backward(this->blob_top_vec_, propagate_down, this->blob_bottom_vec_);
 }
 
 template <typename Dtype>
@@ -68,10 +68,10 @@ void BinaryConvolutionLayerProfile<Dtype>::ProfileSimpleBinaryConvolutionWithTra
 	ConvolutionParameter* convolution_param =
 		layer_param.mutable_convolution_param();
 	convolution_param->set_bias_term(false);
-	convolution_param->add_kernel_size(5);
+	convolution_param->add_kernel_size(1);
 	convolution_param->add_stride(1);
-	convolution_param->add_pad(2);
-	convolution_param->set_num_output(256);
+	convolution_param->add_pad(0);
+	convolution_param->set_num_output(4096);
 	convolution_param->mutable_weight_filler()->set_type("gaussian");
 	convolution_param->mutable_bias_filler()->set_type("constant");
 	convolution_param->mutable_bias_filler()->set_value(0.1);
@@ -80,7 +80,7 @@ void BinaryConvolutionLayerProfile<Dtype>::ProfileSimpleBinaryConvolutionWithTra
 	layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 	layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
 	vector<bool> propagate_down(1, true);
-	layer->Backward(this->blob_bottom_vec_, propagate_down, this->blob_top_vec_);
+	layer->Backward(this->blob_top_vec_, propagate_down, this->blob_bottom_vec_);
 }
 
 

@@ -451,6 +451,9 @@
     <PostBuildEvent>
       <Command>"$(ScriptsDir)\BinplaceCudaDependencies.cmd" "$(CudaToolkitBinDir)" "$(CuDnnPath)" $(CpuOnlyBuild) $(UseCuDNN) "$(OutDir)"</Command>
     </PostBuildEvent>
+    <CudaCompile>
+      <CodeGeneration>$(CudaArchitecture)</CodeGeneration>
+    </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -497,6 +500,9 @@
     <PostBuildEvent>
       <Command>"$(ScriptsDir)\BinplaceCudaDependencies.cmd" "$(CudaToolkitBinDir)" "$(CuDnnPath)" $(CpuOnlyBuild) $(UseCuDNN) "$(OutDir)"</Command>
     </PostBuildEvent>
+    <CudaCompile>
+      <CodeGeneration>$(CudaArchitecture)</CodeGeneration>
+    </CudaCompile>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
