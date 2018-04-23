@@ -2,6 +2,17 @@
 
 #include "caffe/layers/binary_conv_layer.hpp"
 #include "cuda_profiler_api.h"
+#include "nvToolsExt.h"
+
+#define rangePushEx(attr, c, msg) nvtxEventAttributes_t attr = {0};\
+attr.version = NVTX_VERSION;\
+attr.size = NVTX_EVENT_ATTRIB_STRUCT_SIZE;\
+attr.category = c;\
+attr.colorType = NVTX_COLOR_ARGB;\
+attr.color = 0xFFFF0000;\
+attr.messageType = NVTX_MESSAGE_TYPE_ASCII;\
+attr.message.ascii = msg;\
+nvtxRangePushEx(&attr);
 
 namespace caffe {
 
@@ -24,6 +35,19 @@ namespace caffe {
 				sum += std::abs(w[index*kernel_dim + i]);
 			}
 			A[index] = sum / static_cast<Dtype>(kernel_dim);
+		}
+	}
+
+	template <typename Dtype>
+	__global__ void permute_channel(const int nThreads,
+		const int num, const int channels, const int height, const int width,
+		const Dtype* weights, Dtype* buffer) {
+		CUDA_KERNEL_LOOP(index, nThreads) {
+			const int w = index % width;
+			const int h = (index / width) % height;
+			const int c = (index / width / height) % channels;
+			const int n = index / width / height / channels;
+			buffer[((n*height + h)*width + w)*channels + c] = weights[((n*channels + c)*height + h)*width + w];
 		}
 	}
 
@@ -88,12 +112,14 @@ namespace caffe {
 	void BinaryConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 		const vector<Blob<Dtype>*>& top) {
 		cudaProfilerStart();
+		nvtxNameCategoryA(1, "forward_gpu");
 		if (this->phase_ == TRAIN) {
 			const int count = this->blobs_[0]->count();
 			const int num = this->blobs_[0]->num();
 			const int channels = this->blobs_[0]->channels();
 			const int height = this->blobs_[0]->height();
 			const int width = this->blobs_[0]->width();
+			rangePushEx(attr1, 1, "compute mean");
 			// compute mean
 			if (height == 1 && width == 1) {
 				caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num,
@@ -101,20 +127,32 @@ namespace caffe {
 					(Dtype)0., meancenter_.mutable_gpu_data());
 			}
 			else {
-				calc_meancenter<Dtype> << <CAFFE_GET_BLOCKS(count / channels), CAFFE_CUDA_NUM_THREADS >> >(
-					count / channels, num, channels, height, width,
-					this->blobs_[0]->gpu_data(), meancenter_.mutable_gpu_data());
+				permute_channel<Dtype> << <CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS >> > (
+					count, num, channels, height, width,
+					this->blobs_[0]->gpu_data(), w_buffer_.mutable_gpu_data());
+				caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num*height*width,
+					1, channels, Dtype(1. / channels), w_buffer_.gpu_data(), multiplier_.gpu_data(),
+					(Dtype)0., meancenter_.mutable_gpu_data());
 			}
+			nvtxRangePop();
+			rangePushEx(attr2, 1, "remove clamp");
 			// subtract mean and clip weight to [-1,1]
 			meancenter_remove_and_clamp<Dtype> << <CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS >> >(
 				count, num, channels, height, width,
 				meancenter_.gpu_data(), this->blobs_[0]->mutable_gpu_data(), Dtype(-1.0), Dtype(1.0));
+			nvtxRangePop();
+			rangePushEx(attr3, 1, "binarizeGPUTo");
 			// binary weight, binary_w_'s data hold A*sign(w), binary_w_'s diff hold sign(w)
 			binarizeGPUTo(&(*this->blobs_[0]), &binary_w_);
+			nvtxRangePop();
+			rangePushEx(attr4, 1, "store weight to buffer");
 			// store weight to buffer
 			caffe_copy(count, this->blobs_[0]->gpu_data(), w_buffer_.mutable_gpu_data());
+			nvtxRangePop();
+			rangePushEx(attr5, 1, "copy binary weight to weight");
 			// copy binary weight to weight
 			caffe_copy(count, binary_w_.gpu_data(), this->blobs_[0]->mutable_gpu_data());
+			nvtxRangePop();
 		}
 		else {
 			const int count = this->blobs_[0]->count();
@@ -138,7 +176,7 @@ namespace caffe {
 			// copy binary weight to weight
 			caffe_copy(count, binary_w_.gpu_data(), this->blobs_[0]->mutable_gpu_data());
 		}
-
+		rangePushEx(attr6, 1, "forward");
 		const Dtype* weight = this->blobs_[0]->gpu_data();
 		for (int i = 0; i < bottom.size(); ++i) {
 			const Dtype* bottom_data = bottom[i]->gpu_data();
@@ -152,6 +190,7 @@ namespace caffe {
 				}
 			}
 		}
+		nvtxRangePop();
 		if (this->phase_ == TEST) {
 			const int count = this->blobs_[0]->count();
 			// restore weight

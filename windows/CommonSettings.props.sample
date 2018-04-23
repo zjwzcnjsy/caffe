@@ -19,7 +19,8 @@
         <MatlabSupport>true</MatlabSupport>
         <MatlabDir>C:\Program Files\MATLAB\R2016a</MatlabDir>
         <CudaDir>C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0</CudaDir>
-
+		<NvToolsExtDir>C:\Program Files\NVIDIA Corporation\NvToolsExt</NvToolsExtDir>
+		
         <!-- Set CUDA architecture suitable for your GPU.
          Setting proper architecture is important to mimize your run and compile time. -->
         <CudaArchitecture>compute_30,sm_30;compute_35,sm_35;compute_50,sm_50;compute_52,sm_52;compute_61,sm_61;</CudaArchitecture>
@@ -29,7 +30,7 @@
         <ScriptsDir>$(SolutionDir)scripts</ScriptsDir>
     </PropertyGroup>
     <PropertyGroup Condition="'$(CpuOnlyBuild)'=='false'">
-        <CudaDependencies>cublas.lib;cuda.lib;curand.lib;cudart.lib</CudaDependencies>
+        <CudaDependencies>cublas.lib;cuda.lib;curand.lib;cudart.lib;nvToolsExt64_1.lib</CudaDependencies>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(UseCuDNN)'=='true'">
@@ -51,8 +52,8 @@
         <LibraryPath>$(DependencyDir)/Boost/lib64-msvc-14.0;$(DependencyDir)/GFlags/Lib;$(DependencyDir)/GLog/lib;$(DependencyDir)/HDF5/lib;$(DependencyDir)/LEVELDB/lib;$(DependencyDir)/LMDB/lib;$(DependencyDir)/OpenBLAS/lib;$(DependencyDir)/OpenCV/x64/vc14/lib;$(DependencyDir)/Protobuf/lib;$(LibraryPath)</LibraryPath>
     </PropertyGroup>
     <PropertyGroup>
-        <LibraryPath>$(OutDir);$(CudaDir)\lib\$(Platform);$(LibraryPath)</LibraryPath>
-        <IncludePath>$(SolutionDir)..\include;$(SolutionDir)..\src;$(SolutionDir)..\include\caffe\proto;$(CudaDir)\include;$(IncludePath)</IncludePath>
+        <LibraryPath>$(OutDir);$(CudaDir)\lib\$(Platform);$(NvToolsExtDir)\lib\$(Platform);$(LibraryPath)</LibraryPath>
+        <IncludePath>$(SolutionDir)..\include;$(SolutionDir)..\src;$(SolutionDir)..\include\caffe\proto;$(CudaDir)\include;$(NvToolsExtDir)\include;$(IncludePath)</IncludePath>
     </PropertyGroup>
     <PropertyGroup Condition="'$(PythonSupport)'=='true'">
         <LibraryPath>$(PythonDir)\libs;$(LibraryPath)</LibraryPath>

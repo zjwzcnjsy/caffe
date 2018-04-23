@@ -10,7 +10,7 @@ template <typename Dtype>
 class BinaryConvolutionLayerProfile {
  public:
 	 BinaryConvolutionLayerProfile()
-      : blob_bottom_(new Blob<Dtype>(1, 4096, 1, 1)),
+      : blob_bottom_(new Blob<Dtype>(128, 256, 6, 6)),
         blob_top_(new Blob<Dtype>()) {}
   
 	 virtual void SetUp() {
@@ -46,7 +46,7 @@ void BinaryConvolutionLayerProfile<Dtype>::ProfileSimpleBinaryConvolutionWithTes
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
 	convolution_param->set_bias_term(false);
-  convolution_param->add_kernel_size(1);
+  convolution_param->add_kernel_size(6);
   convolution_param->add_stride(1);
 	convolution_param->add_pad(0);
   convolution_param->set_num_output(4096);
@@ -68,7 +68,7 @@ void BinaryConvolutionLayerProfile<Dtype>::ProfileSimpleBinaryConvolutionWithTra
 	ConvolutionParameter* convolution_param =
 		layer_param.mutable_convolution_param();
 	convolution_param->set_bias_term(false);
-	convolution_param->add_kernel_size(1);
+	convolution_param->add_kernel_size(6);
 	convolution_param->add_stride(1);
 	convolution_param->add_pad(0);
 	convolution_param->set_num_output(4096);
