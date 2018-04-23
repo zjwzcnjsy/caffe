@@ -57,7 +57,7 @@ void BinaryConvolutionLayerProfile<Dtype>::ProfileSimpleBinaryConvolutionWithTes
       new BinaryConvolutionLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 	layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-	vector<bool> propagate_down(2, true);
+	vector<bool> propagate_down(1, true);
 	layer->Backward(this->blob_bottom_vec_, propagate_down, this->blob_top_vec_);
 }
 
@@ -79,7 +79,7 @@ void BinaryConvolutionLayerProfile<Dtype>::ProfileSimpleBinaryConvolutionWithTra
 		new BinaryConvolutionLayer<Dtype>(layer_param));
 	layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 	layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-	vector<bool> propagate_down(2, true);
+	vector<bool> propagate_down(1, true);
 	layer->Backward(this->blob_bottom_vec_, propagate_down, this->blob_top_vec_);
 }
 

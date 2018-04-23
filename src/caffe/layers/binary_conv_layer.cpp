@@ -6,9 +6,22 @@ namespace caffe {
 
 template <typename Dtype>
 void calc_meancenter(const int count, const int num, const int channels, const int height, const int width,
-	const Dtype* weights, Dtype* center)
+	const Dtype* weights, Dtype* center, Dtype* w_buffer, const Dtype* multiplier)
 {
-	caffe_set(count / channels, Dtype(0), center);
+	for (int n = 0; n < num; ++n) {
+		for (int c = 0; c < channels; ++c) {
+			for (int h = 0; h < height; ++h) {
+				for (int w = 0; w < width; ++w) {
+					w_buffer[((n*height + h)*width + w)*channels + c] = weights[((n*channels + c)*height + h)*width + w];
+				}
+			}
+		}
+	}
+	const int M = num*height*width;
+	caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, M,
+		1, channels, Dtype(1. / channels), w_buffer, multiplier,
+		(Dtype)0., center);
+	/*caffe_set(count / channels, Dtype(0), center);
 	const int spatial_dim = height * width;
 	const int kernel_dim = channels * height * width;
 	for (int n = 0; n < num; ++n) {
@@ -20,7 +33,7 @@ void calc_meancenter(const int count, const int num, const int channels, const i
 				}
 			}
 		}
-	}
+	}*/
 }
 
 template <typename Dtype>
@@ -95,7 +108,7 @@ void BinaryConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bott
 		const int width = this->blobs_[0]->width();
 		// compute mean
 		calc_meancenter(count, num, channels, height, width,
-			this->blobs_[0]->cpu_data(), meancenter_.mutable_cpu_data());
+			this->blobs_[0]->cpu_data(), meancenter_.mutable_cpu_data(), w_buffer_.mutable_cpu_diff(), multiplier_.cpu_data());
 		// subtract mean and clip weight to [-1,1]
 		meancenter_remove_and_clamp(count, num, channels, height, width,
 			this->blobs_[0]->mutable_cpu_data(), meancenter_.cpu_data(), Dtype(-1.0), Dtype(1.0));
@@ -118,7 +131,7 @@ void BinaryConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bott
 		const int width = this->blobs_[0]->width();
 		// compute mean
 		calc_meancenter(count, num, channels, height, width,
-			this->blobs_[0]->cpu_data(), meancenter_.mutable_cpu_data());
+			this->blobs_[0]->cpu_data(), meancenter_.mutable_cpu_data(), w_buffer_.mutable_cpu_diff(), multiplier_.cpu_data());
 		// subtract mean and clip weight to [-1,1]
 		meancenter_remove_and_clamp(count, num, channels, height, width,
 			this->blobs_[0]->mutable_cpu_data(), meancenter_.cpu_data(), Dtype(-1.0), Dtype(1.0));
@@ -207,9 +220,9 @@ void BinaryConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
 		// restore weight
 		caffe_copy(count, w_buffer_.cpu_data(), this->blobs_[0]->mutable_cpu_data());
 		// compute A grad
-		caffe_mul(count, binary_w_.cpu_diff(), this->blobs_[0]->cpu_diff(), w_buffer_.mutable_cpu_data());
+		caffe_mul(count, binary_w_.cpu_diff(), this->blobs_[0]->cpu_diff(), w_buffer_.mutable_cpu_diff());
 		caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num,
-			1, kernel_dim, Dtype(1. / kernel_dim), w_buffer_.cpu_data(), multiplier_.cpu_data(),
+			1, kernel_dim, Dtype(1. / kernel_dim), w_buffer_.cpu_diff(), multiplier_.cpu_data(),
 			(Dtype)0., A_.mutable_cpu_diff());
 		//calc_A_grad(num, kernel_dim, binary_w_.cpu_diff(), this->blobs_[0]->cpu_diff(), A_.mutable_cpu_diff());
 		// compute w grad
@@ -225,9 +238,9 @@ void BinaryConvolutionLayer<Dtype>::binarizeCPUTo(const Blob<Dtype>* weights, Bl
 	const int num = weights->num();
 	const int kernel_dim = weights->count(1);
 	// compute A
-	caffe_abs(count, weights->cpu_data(), w_buffer_.mutable_cpu_data());
+	caffe_abs(count, weights->cpu_data(), w_buffer_.mutable_cpu_diff());
 	caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num,
-		1, kernel_dim, Dtype(1. / kernel_dim), w_buffer_.cpu_data(), multiplier_.cpu_data(),
+		1, kernel_dim, Dtype(1. / kernel_dim), w_buffer_.cpu_diff(), multiplier_.cpu_data(),
 		(Dtype)0., A_.mutable_cpu_data());
 
 	const int weight_dim = weights->count(1);
