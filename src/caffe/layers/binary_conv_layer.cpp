@@ -207,7 +207,11 @@ void BinaryConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
 		// restore weight
 		caffe_copy(count, w_buffer_.cpu_data(), this->blobs_[0]->mutable_cpu_data());
 		// compute A grad
-		calc_A_grad(num, kernel_dim, binary_w_.cpu_diff(), this->blobs_[0]->cpu_diff(), A_.mutable_cpu_diff());
+		caffe_mul(count, binary_w_.cpu_diff(), this->blobs_[0]->cpu_diff(), w_buffer_.mutable_cpu_data());
+		caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num,
+			1, kernel_dim, Dtype(1. / kernel_dim), w_buffer_.cpu_data(), multiplier_.cpu_data(),
+			(Dtype)0., A_.mutable_cpu_diff());
+		//calc_A_grad(num, kernel_dim, binary_w_.cpu_diff(), this->blobs_[0]->cpu_diff(), A_.mutable_cpu_diff());
 		// compute w grad
 		calc_w_grad(count, channels, kernel_dim,
 			this->blobs_[0]->cpu_data(), binary_w_.cpu_diff(), this->blobs_[0]->cpu_diff(),
@@ -217,13 +221,19 @@ void BinaryConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
 
 template <typename Dtype>
 void BinaryConvolutionLayer<Dtype>::binarizeCPUTo(const Blob<Dtype>* weights, Blob<Dtype>* wb) {
+	const int count = weights->count();
+	const int num = weights->num();
+	const int kernel_dim = weights->count(1);
+	// compute A
+	caffe_abs(count, weights->cpu_data(), w_buffer_.mutable_cpu_data());
+	caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num,
+		1, kernel_dim, Dtype(1. / kernel_dim), w_buffer_.cpu_data(), multiplier_.cpu_data(),
+		(Dtype)0., A_.mutable_cpu_data());
+
 	const int weight_dim = weights->count(1);
-	Dtype * A = A_.mutable_cpu_data();
-	for (int num = 0; num < weights->num(); num++) {
-		A[num] = caffe_cpu_asum(weight_dim, weights->cpu_data() + num * weight_dim) / Dtype(weight_dim);
-	}
+	const Dtype *A = A_.cpu_data();
 	for (int index = 0; index < weights->count(); index++) {
-		const int num = index / weight_dim;
+		const int num = index / kernel_dim;
 		wb->mutable_cpu_data()[index] = A[num] * sign(weights->cpu_data()[index]);
 	}
 }

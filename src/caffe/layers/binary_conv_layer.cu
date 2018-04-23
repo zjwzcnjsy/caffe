@@ -148,7 +148,7 @@ namespace caffe {
 		if (this->phase_ == TEST) {
 			const int count = this->blobs_[0]->count();
 			// restore weight
-			caffe_copy(count, binary_w_.gpu_data(), this->blobs_[0]->mutable_gpu_data());
+			caffe_copy(count, w_buffer_.gpu_data(), this->blobs_[0]->mutable_gpu_data());
 		}
 	}
 
@@ -238,8 +238,6 @@ namespace caffe {
 			caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num,
 				1, kernel_dim, Dtype(1. / kernel_dim), w_buffer_.gpu_data(), multiplier_.gpu_data(),
 				(Dtype)0., A_.mutable_gpu_diff());
-			/*A_backwark_kernel<Dtype> << <CAFFE_GET_BLOCKS(num), CAFFE_CUDA_NUM_THREADS >> >(
-				num, kernel_dim, binary_w_.gpu_diff(), this->blobs_[0]->gpu_diff(), A_.mutable_gpu_diff());*/
 			// compute meancenter grad
 			meancenter_backwark_kernel<Dtype> << <CAFFE_GET_BLOCKS(num*height*width), CAFFE_CUDA_NUM_THREADS >> >(
 				num*height*width, num, channels, height, width, 
