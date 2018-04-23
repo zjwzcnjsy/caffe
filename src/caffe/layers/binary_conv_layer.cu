@@ -1,6 +1,7 @@
 #include <vector>
 
 #include "caffe/layers/binary_conv_layer.hpp"
+//#include "cuda_profiler_api.h"
 
 namespace caffe {
 
@@ -72,8 +73,12 @@ namespace caffe {
 		const int num = weights->num();
 		const int kernel_dim = weights->count(1);
 		// compute A
-		calc_A<Dtype> << <CAFFE_GET_BLOCKS(num), CAFFE_CUDA_NUM_THREADS >> >(
-			num, kernel_dim, weights->gpu_data(), A_.mutable_gpu_data());
+		caffe_gpu_abs(count, weights->gpu_data(), w_buffer_.mutable_gpu_data());
+		caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num,
+			1, kernel_dim, Dtype(1. / kernel_dim), w_buffer_.gpu_data(), multiplier_.gpu_data(),
+			(Dtype)0., A_.mutable_gpu_data());
+		/*calc_A<Dtype> << <CAFFE_GET_BLOCKS(num), CAFFE_CUDA_NUM_THREADS >> >(
+			num, kernel_dim, weights->gpu_data(), A_.mutable_gpu_data());*/
 		// compute sign(w) and A*sign(w)
 		binarize<Dtype> << <CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS >> >(
 			count, kernel_dim, weights->gpu_data(), A_.gpu_data(), wb->mutable_gpu_data(), wb->mutable_gpu_diff());
@@ -82,6 +87,7 @@ namespace caffe {
 	template <typename Dtype>
 	void BinaryConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 		const vector<Blob<Dtype>*>& top) {
+		//cudaProfilerStart();
 		if (this->phase_ == TRAIN) {
 			const int count = this->blobs_[0]->count();
 			const int num = this->blobs_[0]->num();
@@ -228,8 +234,12 @@ namespace caffe {
 			// restore weight
 			caffe_copy(count, w_buffer_.gpu_data(), this->blobs_[0]->mutable_gpu_data());
 			// compute A grad
-			A_backwark_kernel<Dtype> << <CAFFE_GET_BLOCKS(num), CAFFE_CUDA_NUM_THREADS >> >(
-				num, kernel_dim, binary_w_.gpu_diff(), this->blobs_[0]->gpu_diff(), A_.mutable_gpu_diff());
+			caffe_gpu_mul(count, binary_w_.gpu_diff(), this->blobs_[0]->gpu_diff(), w_buffer_.mutable_gpu_data());
+			caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num,
+				1, kernel_dim, Dtype(1. / kernel_dim), w_buffer_.gpu_data(), multiplier_.gpu_data(),
+				(Dtype)0., A_.mutable_gpu_diff());
+			/*A_backwark_kernel<Dtype> << <CAFFE_GET_BLOCKS(num), CAFFE_CUDA_NUM_THREADS >> >(
+				num, kernel_dim, binary_w_.gpu_diff(), this->blobs_[0]->gpu_diff(), A_.mutable_gpu_diff());*/
 			// compute meancenter grad
 			meancenter_backwark_kernel<Dtype> << <CAFFE_GET_BLOCKS(num*height*width), CAFFE_CUDA_NUM_THREADS >> >(
 				num*height*width, num, channels, height, width, 
@@ -240,6 +250,7 @@ namespace caffe {
 				this->blobs_[0]->gpu_data(), binary_w_.gpu_diff(), this->blobs_[0]->gpu_diff(),
 				A_.gpu_data(), A_.gpu_diff(), meancenter_.gpu_diff(), this->blobs_[0]->mutable_gpu_diff());
 		}
+		//cudaProfilerStop();
 	}
 
 	template void BinaryConvolutionLayer<float>::binarizeGPUTo(const Blob<float>* weights, Blob<float>* wb);

@@ -57,11 +57,14 @@ void BinaryConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& botto
   BaseConvolutionLayer<Dtype>::LayerSetUp(bottom, top);
   binary_w_.ReshapeLike(*(this->blobs_[0]));
   w_buffer_.ReshapeLike(*(this->blobs_[0]));
+	multiplier_.ReshapeLike(*(this->blobs_[0]));
+	caffe_set(multiplier_.count(), Dtype(1.), multiplier_.mutable_cpu_data());
   vector<int> meancenter_shape = this->blobs_[0]->shape();
   meancenter_shape[1] = 1;
   meancenter_.Reshape(meancenter_shape);
   vector<int> A_shape(1, this->blobs_[0]->num());
   A_.Reshape(A_shape);
+
 }
 
 template <typename Dtype>

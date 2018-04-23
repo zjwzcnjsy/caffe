@@ -47,6 +47,8 @@ class BinaryConvolutionLayer : public BaseConvolutionLayer<Dtype> {
 
   Blob<Dtype> meancenter_;
   Blob<Dtype> A_;
+
+	Blob<Dtype> multiplier_;
 };
 
 }  // namespace caffe
