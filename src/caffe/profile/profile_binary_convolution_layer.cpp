@@ -10,7 +10,7 @@ template <typename Dtype>
 class BinaryConvolutionLayerProfile {
  public:
 	 BinaryConvolutionLayerProfile()
-      : blob_bottom_(new Blob<Dtype>(128, 256, 6, 6)),
+      : blob_bottom_(new Blob<Dtype>(1, 256, 6, 6)),
         blob_top_(new Blob<Dtype>()) {}
   
 	 virtual void SetUp() {
@@ -57,7 +57,9 @@ void BinaryConvolutionLayerProfile<Dtype>::ProfileSimpleBinaryConvolutionWithTes
       new BinaryConvolutionLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 	layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+	layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
 	vector<bool> propagate_down(1, true);
+	layer->Backward(this->blob_top_vec_, propagate_down, this->blob_bottom_vec_);
 	layer->Backward(this->blob_top_vec_, propagate_down, this->blob_bottom_vec_);
 }
 
@@ -79,7 +81,9 @@ void BinaryConvolutionLayerProfile<Dtype>::ProfileSimpleBinaryConvolutionWithTra
 		new BinaryConvolutionLayer<Dtype>(layer_param));
 	layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 	layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+	layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
 	vector<bool> propagate_down(1, true);
+	layer->Backward(this->blob_top_vec_, propagate_down, this->blob_bottom_vec_);
 	layer->Backward(this->blob_top_vec_, propagate_down, this->blob_bottom_vec_);
 }
 

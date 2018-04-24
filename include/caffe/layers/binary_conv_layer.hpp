@@ -38,7 +38,7 @@ class BinaryConvolutionLayer : public BaseConvolutionLayer<Dtype> {
   virtual void compute_output_shape();
   virtual void binarizeCPUTo(const Blob<Dtype>* weights, Blob<Dtype>* wb);
 #ifndef CPU_ONLY
-  virtual void binarizeGPUTo(const Blob<Dtype>* weights, Blob<Dtype>* wb);
+  virtual void binarizeGPUTo(Blob<Dtype>* weights);
 #endif
 
  private:

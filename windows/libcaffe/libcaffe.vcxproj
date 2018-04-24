@@ -39,6 +39,7 @@
     <ClInclude Include="..\..\include\caffe\layers\bias_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\binary_active_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\binary_conv_layer.hpp" />
+    <ClInclude Include="..\..\include\caffe\layers\binary_conv_layer2.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\bnll_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\center_loss_layer.hpp" />
     <ClInclude Include="..\..\include\caffe\layers\concat_layer.hpp" />
@@ -127,6 +128,7 @@
     <ClInclude Include="..\..\include\caffe\solver_factory.hpp" />
     <ClInclude Include="..\..\include\caffe\syncedmem.hpp" />
     <ClInclude Include="..\..\include\caffe\util\benchmark.hpp" />
+    <ClInclude Include="..\..\include\caffe\util\binary_kernels.hpp" />
     <ClInclude Include="..\..\include\caffe\util\blocking_queue.hpp" />
     <ClInclude Include="..\..\include\caffe\util\cudnn.hpp" />
     <ClInclude Include="..\..\include\caffe\util\db.hpp" />
@@ -158,6 +160,7 @@
     <CudaCompile Include="..\..\src\caffe\layers\bias_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\binary_active_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\binary_conv_layer.cu" />
+    <CudaCompile Include="..\..\src\caffe\layers\binary_conv_layer2.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\bnll_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\center_loss_layer.cu" />
     <CudaCompile Include="..\..\src\caffe\layers\concat_layer.cu" />
@@ -228,6 +231,7 @@
     <CudaCompile Include="..\..\src\caffe\solvers\nesterov_solver.cu" />
     <CudaCompile Include="..\..\src\caffe\solvers\rmsprop_solver.cu" />
     <CudaCompile Include="..\..\src\caffe\solvers\sgd_solver.cu" />
+    <CudaCompile Include="..\..\src\caffe\util\binary_kernels.cu" />
     <CudaCompile Include="..\..\src\caffe\util\im2col.cu" />
     <CudaCompile Include="..\..\src\caffe\util\math_functions.cu" />
   </ItemGroup>
@@ -250,6 +254,7 @@
     <ClCompile Include="..\..\src\caffe\layers\bias_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\binary_active_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\binary_conv_layer.cpp" />
+    <ClCompile Include="..\..\src\caffe\layers\binary_conv_layer2.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\bnll_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\center_loss_layer.cpp" />
     <ClCompile Include="..\..\src\caffe\layers\concat_layer.cpp" />

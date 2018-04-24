@@ -216,6 +216,9 @@
     <ClCompile Include="..\..\src\caffe\test\test_binary_convolution_layer.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\caffe\test\test_binary_convolution_layer2.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

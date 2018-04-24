@@ -1,10 +1,106 @@
 #include <vector>
 
-#include "caffe/layers/binary_conv_layer.hpp"
+#include "caffe/layers/binary_conv_layer2.hpp"
 #include "cuda_profiler_api.h"
 #include "caffe/util/benchmark.hpp"
+#include "caffe/util/binary_kernels.hpp"
 
 namespace caffe {
+
+
+	template <typename Dtype>
+	__global__ void scale_A(const int nThreads, Dtype *C, int m, int n, const Dtype* A) {
+		CUDA_KERNEL_LOOP(index, nThreads) {
+			const int i = index / n;
+			C[index] *= A[i];
+		}
+	}
+
+	template <typename Dtype>
+	void BinaryConvolutionV2Layer<Dtype>::forward_gpu_gemm(const Dtype* input,
+		const Dtype* weights, Dtype* output, bool skip_im2col) {
+		const Dtype* col_buff = input;
+		if (!is_1x1_) {
+			if (!skip_im2col) {
+				conv_im2col_gpu(input, col_buffer_.mutable_gpu_data());
+			}
+			col_buff = col_buffer_.gpu_data();
+		}
+		for (int g = 0; g < group_; ++g) {
+			caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, conv_out_channels_ /
+				group_, conv_out_spatial_dim_, kernel_dim_,
+				(Dtype)1., weights + weight_offset_ * g, col_buff + col_offset_ * g,
+				(Dtype)0., output + output_offset_ * g);
+		}
+	}
+
+	template <typename Dtype>
+	void BinaryConvolutionV2Layer<Dtype>::forward_gpu_gemm_xnor(const Dtype* input,
+		const Dtype* weights, const Dtype* A, Dtype* output, bool skip_im2col) {
+		const Dtype* col_buff = input;
+		if (!is_1x1_) {
+			if (!skip_im2col) {
+				conv_im2col_gpu(input, col_buffer_.mutable_gpu_data());
+			}
+			col_buff = col_buffer_.gpu_data();
+		}
+		const int dim = conv_out_channels_ / group_ * conv_out_spatial_dim_;
+		for (int g = 0; g < group_; ++g) {
+			xnor_gemm(weights, col_buff, output, uiA_.mutable_gpu_data(), uiB_.mutable_gpu_data(),
+				conv_out_channels_ / group_, kernel_dim_, conv_out_spatial_dim_);
+			scale_A<Dtype> << <CAFFE_GET_BLOCKS(dim), CAFFE_CUDA_NUM_THREADS >> >(
+				dim, output, conv_out_channels_ / group_, conv_out_spatial_dim_, A);
+		}
+	}
+
+	template <typename Dtype>
+	void BinaryConvolutionV2Layer<Dtype>::forward_gpu_bias(Dtype* output,
+		const Dtype* bias) {
+		caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num_output_,
+			out_spatial_dim_, 1, (Dtype)1., bias, bias_multiplier_.gpu_data(),
+			(Dtype)1., output);
+	}
+
+	template <typename Dtype>
+	void BinaryConvolutionV2Layer<Dtype>::backward_gpu_gemm(const Dtype* output,
+		const Dtype* weights, Dtype* input) {
+		Dtype* col_buff = col_buffer_.mutable_gpu_data();
+		if (is_1x1_) {
+			col_buff = input;
+		}
+		for (int g = 0; g < group_; ++g) {
+			caffe_gpu_gemm<Dtype>(CblasTrans, CblasNoTrans, kernel_dim_,
+				conv_out_spatial_dim_, conv_out_channels_ / group_,
+				(Dtype)1., weights + weight_offset_ * g, output + output_offset_ * g,
+				(Dtype)0., col_buff + col_offset_ * g);
+		}
+		if (!is_1x1_) {
+			conv_col2im_gpu(col_buff, input);
+		}
+	}
+
+	template <typename Dtype>
+	void BinaryConvolutionV2Layer<Dtype>::weight_gpu_gemm(const Dtype* input,
+		const Dtype* output, Dtype* weights) {
+		const Dtype* col_buff = input;
+		if (!is_1x1_) {
+			conv_im2col_gpu(input, col_buffer_.mutable_gpu_data());
+			col_buff = col_buffer_.gpu_data();
+		}
+		for (int g = 0; g < group_; ++g) {
+			caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasTrans, conv_out_channels_ / group_,
+				kernel_dim_, conv_out_spatial_dim_,
+				(Dtype)1., output + output_offset_ * g, col_buff + col_offset_ * g,
+				(Dtype)1., weights + weight_offset_ * g);
+		}
+	}
+
+	template <typename Dtype>
+	void BinaryConvolutionV2Layer<Dtype>::backward_gpu_bias(Dtype* bias,
+		const Dtype* input) {
+		caffe_gpu_gemv<Dtype>(CblasNoTrans, num_output_, out_spatial_dim_, 1.,
+			input, bias_multiplier_.gpu_data(), 1., bias);
+	}
 
 	template <typename Dtype>
 	__global__ void binarize(const int nThreads, const int kernel_dim,
@@ -121,7 +217,7 @@ namespace caffe {
 	}
 
 	template <typename Dtype>
-	void BinaryConvolutionLayer<Dtype>::binarizeGPUTo(Blob<Dtype>* weights) {
+	void BinaryConvolutionV2Layer<Dtype>::binarizeGPUTo(Blob<Dtype>* weights) {
 		CHECK_EQ(weights->count(), binary_w_.count());
 		CHECK_EQ(weights->num(), A_.num());
 		const int count = weights->count();
@@ -138,7 +234,7 @@ namespace caffe {
 	}
 
 	template <typename Dtype>
-	void BinaryConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+	void BinaryConvolutionV2Layer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 		const vector<Blob<Dtype>*>& top) {
 		cudaProfilerStart();
 		if (this->phase_ == TRAIN) {
@@ -200,11 +296,13 @@ namespace caffe {
 		}
 
 		const Dtype* weight = this->blobs_[0]->gpu_data();
+		const Dtype* w_sign = binary_w_.gpu_diff();
+		const Dtype* A = A_.gpu_data();
 		for (int i = 0; i < bottom.size(); ++i) {
 			const Dtype* bottom_data = bottom[i]->gpu_data();
 			Dtype* top_data = top[i]->mutable_gpu_data();
 			for (int n = 0; n < this->num_; ++n) {
-				this->forward_gpu_gemm(bottom_data + n * this->bottom_dim_, weight,
+				this->forward_gpu_gemm_xnor(bottom_data + n * this->bottom_dim_, w_sign, A,
 					top_data + n * this->top_dim_);
 				if (this->bias_term_) {
 					const Dtype* bias = this->blobs_[1]->gpu_data();
@@ -261,7 +359,7 @@ namespace caffe {
 	}
 
 	template <typename Dtype>
-	void BinaryConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
+	void BinaryConvolutionV2Layer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 		const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
 		const Dtype* weight = this->blobs_[0]->gpu_data();
 		Dtype* weight_diff = this->blobs_[0]->mutable_gpu_diff();
@@ -325,9 +423,9 @@ namespace caffe {
 		}
 	}
 
-	template void BinaryConvolutionLayer<float>::binarizeGPUTo(Blob<float>* weights);
-	template void BinaryConvolutionLayer<double>::binarizeGPUTo(Blob<double>* weights);
+	template void BinaryConvolutionV2Layer<float>::binarizeGPUTo(Blob<float>* weights);
+	template void BinaryConvolutionV2Layer<double>::binarizeGPUTo(Blob<double>* weights);
 
-	INSTANTIATE_LAYER_GPU_FUNCS(BinaryConvolutionLayer);
+	INSTANTIATE_LAYER_GPU_FUNCS(BinaryConvolutionV2Layer);
 
 }  // namespace caffe

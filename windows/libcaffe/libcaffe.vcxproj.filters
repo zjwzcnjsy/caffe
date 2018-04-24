@@ -420,6 +420,12 @@
     <ClInclude Include="..\..\include\caffe\layers\binary_active_layer.hpp">
       <Filter>include\layers</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\caffe\layers\binary_conv_layer2.hpp">
+      <Filter>include\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\caffe\util\binary_kernels.hpp">
+      <Filter>include\util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="..\..\src\caffe\layers\inner_product_layer.cu">
@@ -670,6 +676,12 @@
     </CudaCompile>
     <CudaCompile Include="..\..\src\caffe\layers\binary_active_layer.cu">
       <Filter>cu\layers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\layers\binary_conv_layer2.cu">
+      <Filter>cu\layers</Filter>
+    </CudaCompile>
+    <CudaCompile Include="..\..\src\caffe\util\binary_kernels.cu">
+      <Filter>cu\util</Filter>
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1043,6 +1055,9 @@
       <Filter>src\layers</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\caffe\layers\binary_active_layer.cpp">
+      <Filter>src\layers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\caffe\layers\binary_conv_layer2.cpp">
       <Filter>src\layers</Filter>
     </ClCompile>
   </ItemGroup>
