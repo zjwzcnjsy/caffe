@@ -5,16 +5,10 @@
 #include "caffe/util/benchmark.hpp"
 #include "caffe/util/binary_kernels.hpp"
 
+#include <iostream>
+using namespace std;
+
 namespace caffe {
-
-
-	template <typename Dtype>
-	__global__ void scale_A(const int nThreads, Dtype *C, int m, int n, const Dtype* A) {
-		CUDA_KERNEL_LOOP(index, nThreads) {
-			const int i = index / n;
-			C[index] *= A[i];
-		}
-	}
 
 	template <typename Dtype>
 	void BinaryConvolutionV2Layer<Dtype>::forward_gpu_gemm(const Dtype* input,
@@ -46,10 +40,8 @@ namespace caffe {
 		}
 		const int dim = conv_out_channels_ / group_ * conv_out_spatial_dim_;
 		for (int g = 0; g < group_; ++g) {
-			xnor_gemm(weights, col_buff, output, uiA_.mutable_gpu_data(), uiB_.mutable_gpu_data(),
+			xnor_gemm(weights, A, col_buff, output, uiA_.mutable_gpu_data(), uiB_.mutable_gpu_data(),
 				conv_out_channels_ / group_, kernel_dim_, conv_out_spatial_dim_);
-			scale_A<Dtype> << <CAFFE_GET_BLOCKS(dim), CAFFE_CUDA_NUM_THREADS >> >(
-				dim, output, conv_out_channels_ / group_, conv_out_spatial_dim_, A);
 		}
 	}
 
@@ -295,6 +287,19 @@ namespace caffe {
 			binarizeGPUTo(&(*this->blobs_[0]));
 		}
 
+		/*const Dtype* w_sign_cpu = binary_w_.cpu_diff();
+		cout << "w_sign:";
+		for (int i = 0; i < binary_w_.count(); ++i) {
+			cout << ", " << w_sign_cpu[i];
+		}
+		cout << endl;
+		cout << "A_cpu:";
+		const Dtype* A_cpu = A_.cpu_data();
+		for (int i = 0; i < A_.count(); ++i) {
+			cout << ", " << A_cpu[i];
+		}
+		cout << endl;*/
+
 		const Dtype* weight = this->blobs_[0]->gpu_data();
 		const Dtype* w_sign = binary_w_.gpu_diff();
 		const Dtype* A = A_.gpu_data();
@@ -315,6 +320,33 @@ namespace caffe {
 			// restore weight
 			caffe_copy(count, w_buffer_.gpu_data(), this->blobs_[0]->mutable_gpu_data());
 		}
+
+		/*const Dtype* data1 = top[0]->cpu_data();
+		std::cout << "out1:";
+		for (int i = 0; i < top[0]->count(); ++i) {
+			std::cout << ", " << data1[i];
+		}
+		std::cout << std::endl;
+
+		for (int i = 0; i < bottom.size(); ++i) {
+			const Dtype* bottom_data = bottom[i]->gpu_data();
+			Dtype* top_data = top[i]->mutable_gpu_data();
+			for (int n = 0; n < this->num_; ++n) {
+				this->forward_gpu_gemm(bottom_data + n * this->bottom_dim_, weight,
+					top_data + n * this->top_dim_);
+				if (this->bias_term_) {
+					const Dtype* bias = this->blobs_[1]->gpu_data();
+					this->forward_gpu_bias(top_data + n * this->top_dim_, bias);
+				}
+			}
+		}
+
+		const Dtype* data2 = top[0]->cpu_data();
+		std::cout << "out2:";
+		for (int i = 0; i < top[0]->count(); ++i) {
+			std::cout << ", " << data2[i];
+		}
+		std::cout << std::endl;*/
 		cudaProfilerStop();
 	}
 

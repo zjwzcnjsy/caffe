@@ -6,7 +6,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\caffe\profile\profile_binary_convolution_layer.cpp">
+    <ClCompile Include="..\..\src\caffe\profile\profile_binary_convolution_layer2.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

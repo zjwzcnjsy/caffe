@@ -9,7 +9,8 @@ namespace caffe
 	// CUDA tutorial: http://www.nvidia.com/docs/IO/116711/sc11-cuda-c-basics.pdf
 	// http://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#shared-memory
 	// A is shape (m,n), B is shape (n,k) and C is shape (m,k)
-	__global__ void gemm(float *A, float *B, float *C, int m, int n, int k)
+	template <typename Dtype>
+	__global__ void gemm(Dtype *A, Dtype *alpha, Dtype *B, Dtype *C, int m, int n, int k)
 	{
 
 		// Block row and column
@@ -21,16 +22,16 @@ namespace caffe
 		int col = threadIdx.x;
 
 		// Each thread block computes one sub-matrix Csub of C
-		float *Csub = &C[BLOCK_SIZE * k * blockRow + BLOCK_SIZE * blockCol];
+		Dtype *Csub = &C[BLOCK_SIZE * k * blockRow + BLOCK_SIZE * blockCol];
 
 		// Shared memory used to store Asub and Bsub respectively
-		__shared__ float As[BLOCK_SIZE][BLOCK_SIZE];
-		__shared__ float Bs[BLOCK_SIZE][BLOCK_SIZE];
+		__shared__ Dtype As[BLOCK_SIZE][BLOCK_SIZE];
+		__shared__ Dtype Bs[BLOCK_SIZE][BLOCK_SIZE];
 
 		// Each thread computes one element of Csub
 		// by accumulating results into Cvalue
 		// block_size = 16 -> 256 threads, one per Csub element
-		float Cvalue = 0.0;
+		Dtype Cvalue = 0.0;
 
 		// Loop over all the sub-matrices of A and B that are
 		// required to compute Csub
@@ -40,10 +41,10 @@ namespace caffe
 		{
 
 			// Get sub-matrix Asub of A
-			float *Asub = &A[BLOCK_SIZE * blockRow * n + BLOCK_SIZE * i];
+			Dtype *Asub = &A[BLOCK_SIZE * blockRow * n + BLOCK_SIZE * i];
 
 			// Get sub-matrix Bsub of B
-			float *Bsub = &B[BLOCK_SIZE * k * i + BLOCK_SIZE * blockCol];
+			Dtype *Bsub = &B[BLOCK_SIZE * k * i + BLOCK_SIZE * blockCol];
 
 			// Load Asub and Bsub from device memory to shared memory
 			// Each thread loads one element of each sub-matrix
@@ -67,8 +68,9 @@ namespace caffe
 		// Write Csub to device memory
 		// Each thread writes one element
 		if (col + blockCol * BLOCK_SIZE < k && row + blockRow * BLOCK_SIZE < m)
-			Csub[row * k + col] = Cvalue;
+			Csub[row * k + col] = alpha[row + blockRow * BLOCK_SIZE]*Cvalue;
 	}
+
 
 	// 32 single float array ->  32 bits unsigned int
 	__device__ unsigned int concatenate(float *array)
@@ -99,14 +101,13 @@ namespace caffe
 
 		if (j < n)
 		{
-			float *array = new float[32];
+			__shared__ float array[32];
 			for (int i = 0; i < m; i += 32)
 			{
 				for (int k = 0; k < 32; k++)
 					array[k] = a[j + n * (i + k)];
 				b[j + n * i / 32] = concatenate(array);
 			}
-			delete[] array;
 		}
 	}
 
@@ -138,7 +139,7 @@ namespace caffe
 	}
 
 	// A is shape (m,n), B is shape (n,k) and C is shape (m,k)
-	__global__ void xnor_gemm(unsigned int *A, unsigned int *B, float *C, int m, int n, int k)
+	__global__ void xnor_gemm(unsigned int *A, float *fA, unsigned int *B, float *C, int m, int n, int k)
 	{
 
 		// Block row and column
@@ -197,31 +198,51 @@ namespace caffe
 		// Write Csub to device memory
 		// Each thread writes one element
 		if (col + blockCol * BLOCK_SIZE < k && row + blockRow * BLOCK_SIZE < m)
-			Csub[row * k + col] = -(2 * (float)Cvalue - 32 * n);
+			Csub[row * k + col] = fA[row + blockRow * BLOCK_SIZE] * (-(2 * (float)Cvalue - 32 * n));
+	}
+
+	// A is shape (m,n), B is shape (n,k) and C is shape (m,k)
+	__global__ void xnor_gemm2(const int nThreads, unsigned int *A, float *fA, unsigned int *B, float *C, int m, int n, int k)
+	{
+		CUDA_KERNEL_LOOP(index, nThreads) {
+			const int row = index / k;
+			const int col = index % k;
+			unsigned int Cvalue = 0;
+			for (int t = 0; t < n; t++)
+			{
+				Cvalue += __popc(A[row*n+t] ^ B[t*k+col]);
+			}
+			C[index] = fA[row] * (-(2 * (float)Cvalue - 32 * n));
+		}
 	}
 
 	// A is shape (m,n), B is shape (n,k) and C is shape (m,k)
 	template <>
-	void xnor_gemm(const float *fA, const float *fB, float *fC,
+	void xnor_gemm(const float *fw, const float* fA, const float *fB, float *fC,
 		unsigned int *uiA, unsigned int *uiB, int m, int n, int k)
 	{
+		LOG(INFO) << "m=" << m << ", n=" << n << ", k=" << k;
 		CHECK_EQ(n % 32, 0) << "n must be div by 32";
 		int block = 64, grid = m * n / (block * 32) + 1;
-		concatenate_rows_kernel << <grid, block >> >(const_cast<float*>(fA), uiA, m * n / 32);
+		concatenate_rows_kernel << <grid, block >> >(const_cast<float*>(fw), uiA, m * n / 32);
 
 		grid = k / block + 1;
 		concatenate_cols_kernel << <grid, block >> >(const_cast<float*>(fB), uiB, n, k);
 
-		dim3 blockDim(16, 16);
+		/*dim3 blockDim(16, 16);
 		dim3 gridDim(k / 16 + 1, m / 16 + 1);
-		xnor_gemm << <gridDim, blockDim >> >(uiA, uiB, fC, m, n / 32, k);
+		xnor_gemm << <gridDim, blockDim >> >(uiA, const_cast<float*>(fA), uiB, fC, m, n / 32, k);*/
+
+		xnor_gemm2 << <CAFFE_GET_BLOCKS(m*k), CAFFE_CUDA_NUM_THREADS >> >(m*k, uiA, const_cast<float*>(fA), uiB, fC, m, n / 32, k);
 	}
 
 	template <>
-	void xnor_gemm(const double *fA, const double *fB, double *fC,
+	void xnor_gemm(const double *fw, const double *fA, const double *fB, double *fC,
 		unsigned int *uiA, unsigned int *uiB, int m, int n, int k)
 	{
-		NOT_IMPLEMENTED;
+		dim3 blockDim(16, 16);
+		dim3 gridDim(k / 16 + 1, m / 16 + 1);
+		gemm<double> << <gridDim, blockDim >> >(const_cast<double*>(fw), const_cast<double*>(fA), const_cast<double*>(fB), fC, m, n, k);
 	}
 
 }  // namespace caffe
