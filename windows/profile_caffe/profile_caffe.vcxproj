@@ -115,7 +115,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>libcaffe.lib;$(CudaDependencies);gflags.lib;glog.lib;hdf5.lib;hdf5_hl.lib;szip.lib;zlib.lib;leveldb.lib;lmdb.lib;libopenblas.dll.a;libprotobuf.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libcaffe.lib;$(CudaDependencies);$(AdditionalDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>"$(ScriptsDir)\BinplaceDependencies.cmd" "$(DependencyDir)/bin" "$(PythonDir)" "$(OutDir)"</Command>
@@ -160,7 +160,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>libcaffe.lib;$(CudaDependencies);gflags.lib;glog.lib;hdf5.lib;hdf5_hl.lib;szip.lib;zlib.lib;leveldb.lib;lmdb.lib;libopenblas.dll.a;libprotobuf.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libcaffe.lib;$(CudaDependencies);$(AdditionalDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <Profile>true</Profile>
     </Link>
     <PostBuildEvent>

@@ -221,7 +221,7 @@ namespace caffe
 	void xnor_gemm(const float *fw, const float* fA, const float *fB, float *fC,
 		unsigned int *uiA, unsigned int *uiB, int m, int n, int k)
 	{
-		LOG(INFO) << "m=" << m << ", n=" << n << ", k=" << k;
+		//LOG(INFO) << "m=" << m << ", n=" << n << ", k=" << k;
 		CHECK_EQ(n % 32, 0) << "n must be div by 32";
 		int block = 64, grid = m * n / (block * 32) + 1;
 		concatenate_rows_kernel << <grid, block >> >(const_cast<float*>(fw), uiA, m * n / 32);

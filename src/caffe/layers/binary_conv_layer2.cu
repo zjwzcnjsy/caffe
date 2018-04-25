@@ -1,8 +1,7 @@
 #include <vector>
 
 #include "caffe/layers/binary_conv_layer2.hpp"
-#include "cuda_profiler_api.h"
-#include "caffe/util/benchmark.hpp"
+//#include "caffe/util/benchmark.hpp"
 #include "caffe/util/binary_kernels.hpp"
 
 #include <iostream>
@@ -228,7 +227,6 @@ namespace caffe {
 	template <typename Dtype>
 	void BinaryConvolutionV2Layer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 		const vector<Blob<Dtype>*>& top) {
-		cudaProfilerStart();
 		if (this->phase_ == TRAIN) {
 			const int count = this->blobs_[0]->count();
 			const int num = this->blobs_[0]->num();
@@ -347,7 +345,6 @@ namespace caffe {
 			std::cout << ", " << data2[i];
 		}
 		std::cout << std::endl;*/
-		cudaProfilerStop();
 	}
 
 	template <typename Dtype>
