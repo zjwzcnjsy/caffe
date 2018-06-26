@@ -18,7 +18,7 @@ class MultiLabelDataLayer : public MultiLabelBasePrefetchingDataLayer<Dtype> {
  public:
   explicit MultiLabelDataLayer(const LayerParameter& param);
   virtual ~MultiLabelDataLayer();
-  virtual void MultiLabelDataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
+  virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual inline const char* type() const { return "MultiLabelData"; }
   virtual inline int ExactNumBottomBlobs() const { return 0; }

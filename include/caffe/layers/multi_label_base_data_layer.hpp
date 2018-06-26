@@ -1,5 +1,5 @@
-#ifndef CAFFE_MULTI_LABEL_DATA_LAYERS_HPP_
-#define CAFFE_MULTI_LABEL_DATA_LAYERS_HPP_
+#ifndef CAFFE_MULTI_LABEL_BASE_DATA_LAYERS_HPP_
+#define CAFFE_MULTI_LABEL_BASE_DATA_LAYERS_HPP_
 
 #include <vector>
 
@@ -10,7 +10,6 @@
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/blocking_queue.hpp"
 #include "caffe/layers/base_data_layer.hpp"
-#include "caffe/layers/multi_label_base_data_layer.hpp"
 
 namespace caffe {
 
@@ -50,4 +49,4 @@ class MultiLabelBasePrefetchingDataLayer :
 
 }  // namespace caffe
 
-#endif  // CAFFE_MULTI_LABEL_DATA_LAYERS_HPP_
+#endif  // CAFFE_MULTI_LABEL_BASE_DATA_LAYERS_HPP_
