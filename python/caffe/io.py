@@ -109,6 +109,16 @@ def datum_to_array(datum):
         return np.array(datum.float_data).astype(float).reshape(
             datum.channels, datum.height, datum.width)
 
+def multi_label_datum_to_array(datum):
+    """Converts a datum to an array. Note that the label is not returned,
+    as one can easily get it by calling datum.label.
+    """
+    if len(datum.data):
+        return np.fromstring(datum.data, dtype=np.uint8).reshape(
+            datum.channels, datum.height, datum.width), np.array(datum.label).astype(float)
+    else:
+        return np.array(datum.float_data).astype(float).reshape(
+            datum.channels, datum.height, datum.width), np.array(datum.label).astype(float)
 
 ## Pre-processing
 

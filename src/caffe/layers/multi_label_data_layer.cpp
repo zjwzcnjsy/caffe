@@ -32,6 +32,8 @@ void MultiLabelDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bott
   // Read a data point, and use it to initialize the top blob.
   MultiLabelDatum datum;
   datum.ParseFromString(cursor_->value());
+  CHECK_EQ(datum.has_data(), true);
+  CHECK_GT(datum.label_size(), 0);
 
   // Use data_transformer to infer the expected blob shape from datum.
   vector<int> top_shape = this->data_transformer_->InferBlobShape(datum);
@@ -55,6 +57,9 @@ void MultiLabelDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bott
     for (int i = 0; i < this->prefetch_.size(); ++i) {
       this->prefetch_[i]->label_.Reshape(label_shape);
     }
+    LOG_IF(INFO, Caffe::root_solver())
+      << "output label size: " << top[1]->num() << ","
+      << top[1]->channels();
   }
 }
 
@@ -88,6 +93,7 @@ void MultiLabelDataLayer<Dtype>::load_batch(MultiLabelBatch<Dtype>* batch) {
   double trans_time = 0;
   CPUTimer timer;
   CHECK(batch->data_.count());
+  CHECK(batch->label_.count());
   CHECK(this->transformed_data_.count());
   const int batch_size = this->layer_param_.data_param().batch_size();
 
@@ -109,6 +115,13 @@ void MultiLabelDataLayer<Dtype>::load_batch(MultiLabelBatch<Dtype>* batch) {
       // Reshape batch according to the batch_size.
       top_shape[0] = batch_size;
       batch->data_.Reshape(top_shape);
+
+      if (this->output_labels_) {
+        vector<int> label_shape(2);
+        label_shape[0] = batch_size;
+        label_shape[1] = datum.label_size();
+        batch->label_.Reshape(label_shape);
+      }
     }
 
     // Apply data transformations (mirror, scale, crop...)
@@ -119,10 +132,10 @@ void MultiLabelDataLayer<Dtype>::load_batch(MultiLabelBatch<Dtype>* batch) {
     this->data_transformer_->Transform(datum, &(this->transformed_data_));
     // Copy label.
     if (this->output_labels_) {
-      Dtype* top_label = batch->label_.mutable_cpu_data() + batch->label_.offset(item_id);
+      Dtype* top_label = batch->label_.mutable_cpu_data();
       //caffe_copy(datum.label_size(), datum.label(), top_label);
       for (int i = 0; i < datum.label_size(); ++i) {
-        top_label[i] = datum.label(i);
+        top_label[item_id * datum.label_size() + i] = datum.label(i);
       }
     }
     trans_time += timer.MicroSeconds();
