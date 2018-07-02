@@ -240,7 +240,7 @@ cv::Mat FaceAlignDatumToCVMat(const FaceAlignDatum &datum)
       {
         cv::Vec3b v = cv_img.at<cv::Vec3b>(h, w);
         data_index = (c * datum_height + h) * datum_width + w;
-        v[c] = static_cast<uchar>(data[data_index]);
+        v[3 - c - 1] = static_cast<uchar>(data[data_index]);
         cv_img.at<cv::Vec3b>(h, w) = v;
       }
     }
