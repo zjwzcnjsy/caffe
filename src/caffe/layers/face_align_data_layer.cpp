@@ -46,6 +46,7 @@ FaceAlignDataLayer<Dtype>::FaceAlignDataLayer(const LayerParameter& param)
   scaleStdDev_ = param.face_align_data_param().scalestddev();
 
   visualation_ = param.face_align_data_param().visualation();
+  visualation_step_ = param.face_align_data_param().visualation_step();
 
   const string& mean_shape_file = param.face_align_data_param().mean_shape_file();
   if (Caffe::root_solver()) {
@@ -234,7 +235,7 @@ void FaceAlignDataLayer<Dtype>::load_batch(FaceAlignBatch<Dtype>* batch) {
       }
       cv::imshow(cv::format("image@%d", i), image);
     }
-    cv::waitKey(10);
+    cv::waitKey(visualation_step_);
   }
   timer.Stop();
   batch_timer.Stop();

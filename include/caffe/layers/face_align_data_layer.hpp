@@ -78,6 +78,7 @@ class FaceAlignDataLayer : public FaceAlignBasePrefetchingDataLayer<Dtype> {
   float scaleStdDev_;
 
   bool visualation_;
+  int visualation_step_;
 };
 
 }  // namespace caffe

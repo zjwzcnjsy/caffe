@@ -1468,6 +1468,7 @@ message FaceAlignDataParameter {
   optional float scaleStdDev = 18 [default = 0.05];
 
   optional bool visualation = 19 [default = false];
+  optional int32 visualation_step = 20 [default = -1];
 }
 
 
