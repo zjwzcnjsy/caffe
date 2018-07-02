@@ -53,6 +53,15 @@ message MultiLabelDatum {
   optional bool encoded = 7 [default = false];
 }
 
+message FaceAlignDatum {
+  optional int32 channels = 1;
+  optional int32 height = 2;
+  optional int32 width = 3;
+  // the actual image data, in bytes
+  optional bytes data = 4;
+  repeated float label = 5;
+}
+
 message FillerParameter {
   // The filler type.
   optional string type = 1 [default = 'constant'];
@@ -321,7 +330,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 160 (last added: recurrent_param)
+// LayerParameter next available layer-specific ID: 161 (last added: recurrent_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -433,6 +442,7 @@ message LayerParameter {
   optional LandmarkTransformParameter landmark_transform_param = 157;
   optional LandmarkImageParameter landmark_image_param = 158;
 	optional BinaryConvolutionParameter binary_convolution_param = 159;
+  optional FaceAlignDataParameter face_align_data_param = 160;
 }
 
 // Message that stores parameters used to apply transformation
@@ -1431,6 +1441,33 @@ message BinaryConvolutionParameter{
 	optional bool force_nd_im2col = 17[default = false];
 
 	optional int32 pack_size = 19[default = 32];
+}
+
+message FaceAlignDataParameter {
+  optional uint32 num_landmark = 1 [default = 5];
+  optional uint32 new_image_size = 2;
+  optional float frame_fraction = 3 [default = 0.25];
+  optional string mean_shape_file = 4;
+
+  optional bool random_mirror = 5 [default = false];
+  optional float mirror_prob = 6 [default = 0.5];
+
+  optional float translationX_prob = 7 [default = 0.5];
+  optional bool random_translationX = 8 [default = false];
+  optional float translationMultX = 9 [default = 0.1];
+  optional float translationY_prob = 10 [default = 0.5];
+  optional bool random_translationY = 11 [default = false];
+  optional float translationMultY = 12 [default = 0.1];
+
+  optional float rotation_prob = 13 [default = 0.5];
+  optional bool random_rotation = 14 [default = false];
+  optional float rotationStdDev = 15 [default = 20.];
+
+  optional float scale_prob = 16 [default = 0.5];
+  optional bool random_scale = 17 [default = false];
+  optional float scaleStdDev = 18 [default = 0.05];
+
+  optional bool visualation = 19 [default = false];
 }
 
 

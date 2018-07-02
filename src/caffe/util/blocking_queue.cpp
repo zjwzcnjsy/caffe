@@ -3,6 +3,7 @@
 
 #include "caffe/layers/base_data_layer.hpp"
 #include "caffe/layers/multi_label_base_data_layer.hpp"
+#include "caffe/layers/face_align_base_data_layer.hpp"
 #include "caffe/parallel.hpp"
 #include "caffe/util/blocking_queue.hpp"
 
@@ -90,5 +91,7 @@ template class BlockingQueue<Batch<float>*>;
 template class BlockingQueue<Batch<double>*>;
 template class BlockingQueue<MultiLabelBatch<float>*>;
 template class BlockingQueue<MultiLabelBatch<double>*>;
+template class BlockingQueue<FaceAlignBatch<float>*>;
+template class BlockingQueue<FaceAlignBatch<double>*>;
 
 }  // namespace caffe

@@ -224,6 +224,33 @@ cv::Mat DecodeMultiLabelDatumToCVMat(const MultiLabelDatum& datum, bool is_color
   return cv_img;
 }
 
+cv::Mat FaceAlignDatumToCVMat(const FaceAlignDatum &datum)
+{
+  cv::Mat cv_img = cv::Mat::zeros(datum.height(), datum.width(), CV_8UC3);
+  const string &data = datum.data();
+  int datum_channels = datum.channels();
+  int datum_height = datum.height();
+  int datum_width = datum.width();
+  int data_index;
+  for (int c = 0; c < datum_channels; ++c)
+  {
+    for (int h = 0; h < datum_height; ++h)
+    {
+      for (int w = 0; w < datum_width; ++w)
+      {
+        cv::Vec3b v = cv_img.at<cv::Vec3b>(h, w);
+        data_index = (c * datum_height + h) * datum_width + w;
+        v[c] = static_cast<uchar>(data[data_index]);
+        cv_img.at<cv::Vec3b>(h, w) = v;
+      }
+    }
+  }
+  if (!cv_img.data) {
+    LOG(ERROR) << "Could not decode datum ";
+  }
+  return cv_img;
+}
+
 // If Datum is encoded will decoded using DecodeDatumToCVMat and CVMatToDatum
 // If Datum is not encoded will do nothing
 bool DecodeDatumNative(Datum* datum) {

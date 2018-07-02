@@ -98,6 +98,22 @@ def array_to_multi_label_datum(arr, label=None):
     return datum
 
 
+def array_to_face_align_datum(arr, label=None):
+    """Converts a 3-dimensional array to datum. If the array has dtype uint8,
+    the output data will be encoded as a string. Otherwise, the output data
+    will be stored in float format.
+    """
+    if arr.ndim != 3:
+        raise ValueError('Incorrect array shape.')
+    assert arr.dtype == np.uint8, 'only support uint8 type image'
+    datum = caffe_pb2.FaceAlignDatum()
+    datum.channels, datum.height, datum.width = arr.shape
+    datum.data = arr.tostring()
+    if label is not None:
+        datum.label.extend(label.astype(float).flat)
+    return datum
+
+
 def datum_to_array(datum):
     """Converts a datum to an array. Note that the label is not returned,
     as one can easily get it by calling datum.label.
@@ -119,6 +135,15 @@ def multi_label_datum_to_array(datum):
     else:
         return np.array(datum.float_data).astype(float).reshape(
             datum.channels, datum.height, datum.width), np.array(datum.label).astype(float)
+
+
+def face_align_datum_to_array(datum):
+    """Converts a datum to an array. Note that the label is not returned,
+    as one can easily get it by calling datum.label.
+    """
+    assert len(datum.data) > 0
+    return np.fromstring(datum.data, dtype=np.uint8).reshape(
+        datum.channels, datum.height, datum.width), np.array(datum.label).astype(float)
 
 ## Pre-processing
 

@@ -51,6 +51,18 @@ class DataTransformer {
 
   /**
    * @brief Applies the transformation defined in the data layer's
+   * transform_param block to the data.
+   *
+   * @param datum
+   *    FaceAlignDatum containing the data to be transformed.
+   * @param transformed_blob
+   *    This is destination blob. It can be part of top blob's data if
+   *    set_cpu_data() is used. See data_layer.cpp for an example.
+   */
+  void Transform(const FaceAlignDatum& datum, Blob<Dtype>* transformed_blob);
+
+  /**
+   * @brief Applies the transformation defined in the data layer's
    * transform_param block to a vector of Datum.
    *
    * @param datum_vector
@@ -73,6 +85,19 @@ class DataTransformer {
    *    set_cpu_data() is used. See memory_layer.cpp for an example.
    */
   void Transform(const vector<MultiLabelDatum> & datum_vector,
+                Blob<Dtype>* transformed_blob);
+
+  /**
+   * @brief Applies the transformation defined in the data layer's
+   * transform_param block to a vector of Datum.
+   *
+   * @param datum_vector
+   *    A vector of FaceAlignDatum containing the data to be transformed.
+   * @param transformed_blob
+   *    This is destination blob. It can be part of top blob's data if
+   *    set_cpu_data() is used. See memory_layer.cpp for an example.
+   */
+  void Transform(const vector<FaceAlignDatum> & datum_vector,
                 Blob<Dtype>* transformed_blob);
 
 #ifdef USE_OPENCV
@@ -136,6 +161,15 @@ class DataTransformer {
   /**
    * @brief Infers the shape of transformed_blob will have when
    *    the transformation is applied to the data.
+   *
+   * @param datum
+   *    FaceAlignDatum containing the data to be transformed.
+   */
+  vector<int> InferBlobShape(const FaceAlignDatum& datum);
+
+  /**
+   * @brief Infers the shape of transformed_blob will have when
+   *    the transformation is applied to the data.
    *    It uses the first element to infer the shape of the blob.
    *
    * @param datum_vector
@@ -175,6 +209,7 @@ class DataTransformer {
 
   void Transform(const Datum& datum, Dtype* transformed_data);
   void Transform(const MultiLabelDatum& datum, Dtype* transformed_data);
+  void Transform(const FaceAlignDatum& datum, Dtype* transformed_data);
   // Tranformation parameters
   TransformationParameter param_;
 
