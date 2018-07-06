@@ -353,8 +353,8 @@ cv::Mat FaceAlignDataLayer<Dtype>::generatePerturbation(const cv::Mat& groundTru
   if (random_rotation_) {
     caffe_rng_uniform<float>(1, 0.f, 1.f, &rotation_prob);
     if (rotation_prob > rotation_prob_) {
-      //caffe_rng_gaussian<float>(1, 0.f, rotationStdDevRad, &angle);
-      caffe_rng_uniform<float>(1, -rotationStdDevRad, rotationStdDevRad, &angle);
+      caffe_rng_gaussian<float>(1, 0.f, rotationStdDevRad, &angle);
+      //caffe_rng_uniform<float>(1, -rotationStdDevRad, rotationStdDevRad, &angle);
     }
   }
   else {
@@ -364,8 +364,8 @@ cv::Mat FaceAlignDataLayer<Dtype>::generatePerturbation(const cv::Mat& groundTru
   if (random_translationX_) {
     caffe_rng_uniform<float>(1, 0.f, 1.f, &offsetX_prob);
     if (offsetX_prob > translationX_prob_) {
-      //caffe_rng_gaussian<float>(1, 0.f, translationXStdDev, &offsetX);
-      caffe_rng_uniform<float>(1, -translationXStdDev, translationXStdDev, &offsetX);
+      caffe_rng_gaussian<float>(1, 0.f, translationXStdDev, &offsetX);
+      //caffe_rng_uniform<float>(1, -translationXStdDev, translationXStdDev, &offsetX);
     }
   } else {
     offsetX = 0.;
@@ -374,8 +374,8 @@ cv::Mat FaceAlignDataLayer<Dtype>::generatePerturbation(const cv::Mat& groundTru
   if (random_translationY_) {
     caffe_rng_uniform<float>(1, 0.f, 1.f, &offsetY_prob);
     if (offsetY_prob > translationY_prob_) {
-      //caffe_rng_gaussian<float>(1, 0.f, translationYStdDev, &offsetY);
-      caffe_rng_uniform<float>(1, -translationYStdDev, translationYStdDev, &offsetY);
+      caffe_rng_gaussian<float>(1, 0.f, translationYStdDev, &offsetY);
+      //caffe_rng_uniform<float>(1, -translationYStdDev, translationYStdDev, &offsetY);
     }
   } else {
     offsetY = 0.;
@@ -383,8 +383,8 @@ cv::Mat FaceAlignDataLayer<Dtype>::generatePerturbation(const cv::Mat& groundTru
   if (random_scale_) {
     caffe_rng_uniform<float>(1, 0.f, 1.f, &scaling_prob);
     if (scaling_prob > scale_prob_) {
-      //caffe_rng_gaussian<float>(1, 1.f, scaleStdDev_, &scaling);
-      caffe_rng_uniform<float>(1, 1.f - scaleStdDev_, 1.f + scaleStdDev_, &scaling);
+      caffe_rng_gaussian<float>(1, 1.f, scaleStdDev_, &scaling);
+      //caffe_rng_uniform<float>(1, 1.f - scaleStdDev_, 1.f + scaleStdDev_, &scaling);
     }
   } else {
     scaling = 1.;
