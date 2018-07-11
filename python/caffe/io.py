@@ -98,7 +98,7 @@ def array_to_multi_label_datum(arr, label=None):
     return datum
 
 
-def array_to_face_align_datum(arr, label=None):
+def array_to_face_align_datum(arr, label=None, bbox=None):
     """Converts a 3-dimensional array to datum. If the array has dtype uint8,
     the output data will be encoded as a string. Otherwise, the output data
     will be stored in float format.
@@ -111,6 +111,8 @@ def array_to_face_align_datum(arr, label=None):
     datum.data = arr.tostring()
     if label is not None:
         datum.label.extend(label.astype(float).flat)
+    if bbox is not None:
+        datum.bbox_x, datum.bbox_y, datum.bbox_w, datum.bbox_h = bbox
     return datum
 
 
