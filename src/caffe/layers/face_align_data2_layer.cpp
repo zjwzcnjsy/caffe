@@ -211,10 +211,10 @@ void FaceAlignData2Layer<Dtype>::load_batch(FaceAlignBatch<Dtype> *batch)
     }
     bool flag = true;
     cv::Mat tempImg, tempGroundTruth;
-    do {
+    //do {
       flag = generatePerturbation(
         image, cur_shape, face_box, tempImg, tempGroundTruth);
-    } while(!flag);
+    //} while(!flag);
 
     // for (int i = 0; i < tempInit.rows; ++i) {
     //   float x = tempInit.at<float>(i, 0);
@@ -349,12 +349,12 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
   temp_face_box.width *= scaling;
   temp_face_box.height *= scaling;
 
-  cv::Rect_<float> and_face_box = face_box & temp_face_box;
-  float p = and_face_box.area() / (face_box.area() + temp_face_box.area() - and_face_box.area());
-  if (p < p_)
-  {
-    return false;
-  }
+  // cv::Rect_<float> and_face_box = face_box & temp_face_box;
+  // float p = and_face_box.area() / (face_box.area() + temp_face_box.area() - and_face_box.area());
+  // if (p < p_)
+  // {
+  //   return false;
+  // }
 
   cv::Point2f face_box_center(temp_face_box.x + temp_face_box.width / 2.,
                               temp_face_box.y + temp_face_box.height / 2.);
@@ -390,17 +390,17 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
   }
   tempGroundTruth *= new_image_size_ / square_face_box_size;
 
-  cv::Rect_<float> valid_rect(0, 0, new_image_size_, new_image_size_);
+  // cv::Rect_<float> valid_rect(0, 0, new_image_size_, new_image_size_);
   bool flag = true;
-  for (int i = 0; i < tempGroundTruth.rows; ++i)
-  {
-    float x = tempGroundTruth.at<float>(i, 0);
-    float y = tempGroundTruth.at<float>(i, 1);
-    if (!valid_rect.contains(cv::Point_<float>(x, y))) {
-      flag = false;
-      break;
-    }
-  }
+  // for (int i = 0; i < tempGroundTruth.rows; ++i)
+  // {
+  //   float x = tempGroundTruth.at<float>(i, 0);
+  //   float y = tempGroundTruth.at<float>(i, 1);
+  //   if (!valid_rect.contains(cv::Point_<float>(x, y))) {
+  //     flag = false;
+  //     break;
+  //   }
+  // }
   return flag;
 }
 
