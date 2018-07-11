@@ -1473,6 +1473,8 @@ message FaceAlignDataParameter {
 
   optional bool visualation = 19 [default = false];
   optional int32 visualation_step = 20 [default = -1];
+
+  optional float p = 21 [default = 0.0];
 }
 
 

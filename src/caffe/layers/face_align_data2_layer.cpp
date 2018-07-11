@@ -48,6 +48,7 @@ FaceAlignData2Layer<Dtype>::FaceAlignData2Layer(const LayerParameter &param)
 
   visualation_ = param.face_align_data_param().visualation();
   visualation_step_ = param.face_align_data_param().visualation_step();
+  p_ = param.face_align_data_param().p();
 
   const string &mean_shape_file = param.face_align_data_param().mean_shape_file();
   if (Caffe::root_solver())
@@ -340,13 +341,20 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
   }
 
   cv::Rect_<float> temp_face_box = face_box;
-  temp_face_box.x -= (scaling - 1.) * face_box.width / 2.;
-  temp_face_box.y -= (scaling - 1.) * face_box.height / 2.;
+  temp_face_box.x += offsetX;
+  temp_face_box.y += offsetY;
+
+  temp_face_box.x -= (scaling - 1.) * temp_face_box.width / 2.;
+  temp_face_box.y -= (scaling - 1.) * temp_face_box.height / 2.;
   temp_face_box.width *= scaling;
   temp_face_box.height *= scaling;
 
-  temp_face_box.x += offsetX;
-  temp_face_box.y += offsetY;
+  cv::Rect_<float> and_face_box = face_box & temp_face_box;
+  float p = and_face_box.area() / (face_box.area() + temp_face_box.area());
+  if (p < p_)
+  {
+    return false;
+  }
 
   cv::Point2f face_box_center(temp_face_box.x + temp_face_box.width / 2.,
                               temp_face_box.y + temp_face_box.height / 2.);
@@ -355,8 +363,6 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
   temp_face_box.y = face_box_center.y - square_face_box_size / 2.;
   temp_face_box.width = square_face_box_size;
   temp_face_box.height = square_face_box_size;
-
-  int rotation_face_box_size = static_cast<int>(square_face_box_size * (sinf(angle) + cosf(angle)));
 
   cv::Mat M(2, 3, CV_64FC1);
   M.at<double>(0, 0) = cos(angle);
