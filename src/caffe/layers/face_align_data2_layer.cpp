@@ -350,7 +350,7 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
   temp_face_box.height *= scaling;
 
   cv::Rect_<float> and_face_box = face_box & temp_face_box;
-  float p = and_face_box.area() / (face_box.area() + temp_face_box.area());
+  float p = and_face_box.area() / (face_box.area() + temp_face_box.area() - and_face_box.area());
   if (p < p_)
   {
     return false;
@@ -392,12 +392,13 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
 
   cv::Rect_<float> valid_rect(0, 0, new_image_size_, new_image_size_);
   bool flag = true;
-  for (int i = 0; i < groundTruth.rows; ++i)
+  for (int i = 0; i < tempGroundTruth.rows; ++i)
   {
     float x = tempGroundTruth.at<float>(i, 0);
     float y = tempGroundTruth.at<float>(i, 1);
     if (!valid_rect.contains(cv::Point_<float>(x, y))) {
       flag = false;
+      break;
     }
   }
   return flag;
