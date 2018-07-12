@@ -393,24 +393,24 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
   }
   tempGroundTruth *= new_image_size_ / square_face_box_size;
 
-  cv::Rect_<float> valid_rect(0, 0, new_image_size_, new_image_size_);
-  bool flag = true;
-  int valid_count = 0;
-  for (int i = 0; i < tempGroundTruth.rows; ++i)
-  {
-    float x = tempGroundTruth.at<float>(i, 0);
-    float y = tempGroundTruth.at<float>(i, 1);
-    if (!valid_rect.contains(cv::Point_<float>(x, y))) {
-      flag = false;
-      break;
-    }
-    else {
-      ++valid_count;
-    }
-  }
-  if (!flag) {
-    return false;
-  }
+  // cv::Rect_<float> valid_rect(0, 0, new_image_size_, new_image_size_);
+  // bool flag = true;
+  // int valid_count = 0;
+  // for (int i = 0; i < tempGroundTruth.rows; ++i)
+  // {
+  //   float x = tempGroundTruth.at<float>(i, 0);
+  //   float y = tempGroundTruth.at<float>(i, 1);
+  //   if (!valid_rect.contains(cv::Point_<float>(x, y))) {
+  //     flag = false;
+  //     break;
+  //   }
+  //   else {
+  //     ++valid_count;
+  //   }
+  // }
+  // if (!flag) {
+  //   return false;
+  // }
   
   
   cv::Mat iM;
