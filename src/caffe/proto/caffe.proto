@@ -1474,7 +1474,7 @@ message FaceAlignDataParameter {
   optional bool visualation = 19 [default = false];
   optional int32 visualation_step = 20 [default = -1];
 
-  optional uint32 max_trials = 21 [default=100];
+  optional int32 max_trials = 21 [default=100];
   optional float min_jaccard_overlap = 22 [default = 0.0];
 }
 

@@ -209,7 +209,10 @@ void FaceAlignData2Layer<Dtype>::load_batch(FaceAlignBatch<Dtype> *batch)
       if (trials >= max_trials_) {
         break;
       }
-    } while(!flag);
+      if (flag) {
+        break;
+      }
+    } while(true);
 
     if (!flag || trials >= max_trials_) {
       item_id--;
