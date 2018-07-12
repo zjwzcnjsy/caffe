@@ -74,7 +74,8 @@ class FaceAlignData2Layer : public FaceAlignBasePrefetchingDataLayer<Dtype> {
   bool visualation_;
   int visualation_step_;
 
-  float p_;
+  float min_jaccard_overlap_;
+  int max_trials_;
 };
 
 }  // namespace caffe

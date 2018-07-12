@@ -48,7 +48,9 @@ FaceAlignData2Layer<Dtype>::FaceAlignData2Layer(const LayerParameter &param)
 
   visualation_ = param.face_align_data_param().visualation();
   visualation_step_ = param.face_align_data_param().visualation_step();
-  p_ = param.face_align_data_param().p();
+
+  max_trials_ = param.face_align_data_param().max_trials();
+  min_jaccard_overlap_ = param.face_align_data_param().min_jaccard_overlap();
 
   const string &mean_shape_file = param.face_align_data_param().mean_shape_file();
   if (Caffe::root_solver())
@@ -196,6 +198,21 @@ void FaceAlignData2Layer<Dtype>::load_batch(FaceAlignBatch<Dtype> *batch)
     // }
     // Apply data transformations (mirror, scale, crop...)
     timer.Start();
+    
+    bool flag = true;
+    cv::Mat tempImg, tempGroundTruth;
+    int trials = 0;
+    do {
+      flag = generatePerturbation(
+        image, cur_shape, face_box, tempImg, tempGroundTruth);
+      ++trials;
+    } while(!flag && trials < max_trials_);
+
+    if (!flag || trials >= max_trials_) {
+      item_id--;
+      continue;
+    }
+
     // random mirror
     if (random_mirror_)
     {
@@ -203,18 +220,11 @@ void FaceAlignData2Layer<Dtype>::load_batch(FaceAlignBatch<Dtype> *batch)
       caffe_rng_uniform<float>(1, 0.f, 1.f, &mirror_prob);
       if (mirror_prob > mirror_prob_)
       {
-        cv::Mat tempShape = mirrorShape(cur_shape, image);
-        face_box.x = image.cols - face_box.width - face_box.x;
-        cv::flip(image, image, 1);
-        cur_shape = tempShape;
+        cv::Mat tempShape = mirrorShape(tempGroundTruth, tempImg);
+        cv::flip(tempImg, tempImg, 1);
+        tempGroundTruth = tempShape;
       }
     }
-    bool flag = true;
-    cv::Mat tempImg, tempGroundTruth;
-    //do {
-      flag = generatePerturbation(
-        image, cur_shape, face_box, tempImg, tempGroundTruth);
-    //} while(!flag);
 
     // for (int i = 0; i < tempInit.rows; ++i) {
     //   float x = tempInit.at<float>(i, 0);
@@ -225,9 +235,10 @@ void FaceAlignData2Layer<Dtype>::load_batch(FaceAlignBatch<Dtype> *batch)
     //   cv::circle(image, cv::Point(x, y), 1, cv::Scalar(255, 255, 255), 1);
     // }
     // cv::imshow(cv::format("img#%d", item_id), image);
-
-    batchSampleImages[item_id] = tempImg.clone();
-    batchSampleShapes[item_id] = tempGroundTruth.clone();
+    if (visualation_) {
+      batchSampleImages[item_id] = tempImg.clone();
+      batchSampleShapes[item_id] = tempGroundTruth.clone();
+    }
 
     int offset = batch->data_.offset(item_id);
     Dtype *top_data = batch->data_.mutable_cpu_data();
@@ -349,12 +360,12 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
   temp_face_box.width *= scaling;
   temp_face_box.height *= scaling;
 
-  // cv::Rect_<float> and_face_box = face_box & temp_face_box;
-  // float p = and_face_box.area() / (face_box.area() + temp_face_box.area() - and_face_box.area());
-  // if (p < p_)
-  // {
-  //   return false;
-  // }
+  cv::Rect_<float> and_face_box = face_box & temp_face_box;
+  float jaccard_overlap = and_face_box.area() / (face_box.area() + temp_face_box.area() - and_face_box.area());
+  if (jaccard_overlap < min_jaccard_overlap_)
+  {
+    return false;
+  }
 
   cv::Point2f face_box_center(temp_face_box.x + temp_face_box.width / 2.,
                               temp_face_box.y + temp_face_box.height / 2.);
@@ -372,8 +383,12 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
   M.at<double>(0, 2) = -(face_box_center.x * M.at<double>(0, 0) + face_box_center.y * M.at<double>(0, 1)) + square_face_box_size / 2;
   M.at<double>(1, 2) = -(face_box_center.x * M.at<double>(1, 0) + face_box_center.y * M.at<double>(1, 1)) + square_face_box_size / 2;
 
+  cv::Mat iM;
+  cv::invertAffineTransform(M, iM);
+
   cv::Mat warpImage;
-  cv::warpAffine(image, warpImage, M, cv::Size(square_face_box_size, square_face_box_size));
+  cv::warpAffine(image, warpImage, iM, cv::Size(square_face_box_size, square_face_box_size),
+    cv::INTER_LINEAR | cv::WARP_INVERSE_MAP);
 
   cv::Mat imageCopy = image.clone();
   cv::rectangle(imageCopy, temp_face_box, cv::Scalar(0, 255, 0), 2);
@@ -390,17 +405,17 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
   }
   tempGroundTruth *= new_image_size_ / square_face_box_size;
 
-  // cv::Rect_<float> valid_rect(0, 0, new_image_size_, new_image_size_);
+  cv::Rect_<float> valid_rect(0, 0, new_image_size_, new_image_size_);
   bool flag = true;
-  // for (int i = 0; i < tempGroundTruth.rows; ++i)
-  // {
-  //   float x = tempGroundTruth.at<float>(i, 0);
-  //   float y = tempGroundTruth.at<float>(i, 1);
-  //   if (!valid_rect.contains(cv::Point_<float>(x, y))) {
-  //     flag = false;
-  //     break;
-  //   }
-  // }
+  for (int i = 0; i < tempGroundTruth.rows; ++i)
+  {
+    float x = tempGroundTruth.at<float>(i, 0);
+    float y = tempGroundTruth.at<float>(i, 1);
+    if (!valid_rect.contains(cv::Point_<float>(x, y))) {
+      flag = false;
+      break;
+    }
+  }
   return flag;
 }
 
