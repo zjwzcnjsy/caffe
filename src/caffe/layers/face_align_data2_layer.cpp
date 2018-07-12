@@ -206,7 +206,7 @@ void FaceAlignData2Layer<Dtype>::load_batch(FaceAlignBatch<Dtype> *batch)
       flag = generatePerturbation(
         image, cur_shape, face_box, tempImg, tempGroundTruth);
       ++trials;
-    } while(!flag && trials < max_trials_);
+    } while((!flag) && trials < max_trials_);
 
     if (!flag || trials >= max_trials_) {
       item_id--;
@@ -290,19 +290,19 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
     cv::Mat &tempGroundTruth)
 {
 
-  float rotationStdDevRad = rotationStdDev_ * CV_PI / 180;
-  float translationXStdDev = translationMultX_ * face_box.width;
-  float translationYStdDev = translationMultY_ * face_box.height;
+  double rotationStdDevRad = rotationStdDev_ * CV_PI / 180.;
+  double translationXStdDev = translationMultX_ * face_box.width;
+  double translationYStdDev = translationMultY_ * face_box.height;
 
-  float rotation_prob, offsetX_prob, offsetY_prob, scaling_prob;
-  float angle = 0., offsetX = 0., offsetY = 0., scaling = 1.;
+  double rotation_prob, offsetX_prob, offsetY_prob, scaling_prob;
+  double angle = 0., offsetX = 0., offsetY = 0., scaling = 1.;
   if (random_rotation_)
   {
-    caffe_rng_uniform<float>(1, 0.f, 1.f, &rotation_prob);
+    caffe_rng_uniform<double>(1, 0.f, 1.f, &rotation_prob);
     if (rotation_prob > rotation_prob_)
     {
-      //caffe_rng_gaussian<float>(1, 0.f, rotationStdDevRad, &angle);
-      caffe_rng_uniform<float>(1, -rotationStdDevRad, rotationStdDevRad, &angle);
+      //caffe_rng_gaussian<double>(1, 0.f, rotationStdDevRad, &angle);
+      caffe_rng_uniform<double>(1, -rotationStdDevRad, rotationStdDevRad, &angle);
     }
   }
   else
@@ -312,11 +312,11 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
 
   if (random_translationX_)
   {
-    caffe_rng_uniform<float>(1, 0.f, 1.f, &offsetX_prob);
+    caffe_rng_uniform<double>(1, 0.f, 1.f, &offsetX_prob);
     if (offsetX_prob > translationX_prob_)
     {
-      //caffe_rng_gaussian<float>(1, 0.f, translationXStdDev, &offsetX);
-      caffe_rng_uniform<float>(1, -translationXStdDev, translationXStdDev, &offsetX);
+      //caffe_rng_gaussian<double>(1, 0.f, translationXStdDev, &offsetX);
+      caffe_rng_uniform<double>(1, -translationXStdDev, translationXStdDev, &offsetX);
     }
   }
   else
@@ -326,11 +326,11 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
 
   if (random_translationY_)
   {
-    caffe_rng_uniform<float>(1, 0.f, 1.f, &offsetY_prob);
+    caffe_rng_uniform<double>(1, 0.f, 1.f, &offsetY_prob);
     if (offsetY_prob > translationY_prob_)
     {
-      //caffe_rng_gaussian<float>(1, 0.f, translationYStdDev, &offsetY);
-      caffe_rng_uniform<float>(1, -translationYStdDev, translationYStdDev, &offsetY);
+      //caffe_rng_gaussian<double>(1, 0.f, translationYStdDev, &offsetY);
+      caffe_rng_uniform<double>(1, -translationYStdDev, translationYStdDev, &offsetY);
     }
   }
   else
@@ -339,11 +339,11 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
   }
   if (random_scale_)
   {
-    caffe_rng_uniform<float>(1, 0.f, 1.f, &scaling_prob);
+    caffe_rng_uniform<double>(1, 0.f, 1.f, &scaling_prob);
     if (scaling_prob > scale_prob_)
     {
-      //caffe_rng_gaussian<float>(1, 1.f, scaleStdDev_, &scaling);
-      caffe_rng_uniform<float>(1, 1.f - scaleStdDev_, 1.f + scaleStdDev_, &scaling);
+      //caffe_rng_gaussian<double>(1, 1.f, scaleStdDev_, &scaling);
+      caffe_rng_uniform<double>(1, 1.f - scaleStdDev_, 1.f + scaleStdDev_, &scaling);
     }
   }
   else
@@ -369,11 +369,22 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
 
   cv::Point2f face_box_center(temp_face_box.x + temp_face_box.width / 2.,
                               temp_face_box.y + temp_face_box.height / 2.);
-  float square_face_box_size = std::max(temp_face_box.width, temp_face_box.height);
-  temp_face_box.x = face_box_center.x - square_face_box_size / 2.;
-  temp_face_box.y = face_box_center.y - square_face_box_size / 2.;
-  temp_face_box.width = square_face_box_size;
-  temp_face_box.height = square_face_box_size;
+  double square_face_box_size = std::max(temp_face_box.width, temp_face_box.height);
+  // temp_face_box.x = face_box_center.x - square_face_box_size / 2.;
+  // temp_face_box.y = face_box_center.y - square_face_box_size / 2.;
+  // temp_face_box.width = square_face_box_size;
+  // temp_face_box.height = square_face_box_size;
+
+  // cv::Mat imageCopy = image.clone();
+  // cv::rectangle(imageCopy, temp_face_box, 
+  //   cv::Scalar(0, 255, 0), 4);
+  // cv::circle(imageCopy, face_box_center, 2, cv::Scalar(255, 0, 0), 2);
+  // cv::putText(imageCopy, cv::format("%.2f", angle), face_box_center, cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0, 0, 255), 2);
+  
+  double w = temp_face_box.width;
+  double h = temp_face_box.height;
+  double angle_abs = abs(angle);
+  square_face_box_size = std::max(w*cos(angle_abs)+h*sin(angle_abs), w*sin(angle_abs)+h*cos(angle_abs));
 
   cv::Mat M(2, 3, CV_64FC1);
   M.at<double>(0, 0) = cos(angle);
@@ -393,25 +404,24 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
   }
   tempGroundTruth *= new_image_size_ / square_face_box_size;
 
-  // cv::Rect_<float> valid_rect(0, 0, new_image_size_, new_image_size_);
-  // bool flag = true;
-  // int valid_count = 0;
-  // for (int i = 0; i < tempGroundTruth.rows; ++i)
-  // {
-  //   float x = tempGroundTruth.at<float>(i, 0);
-  //   float y = tempGroundTruth.at<float>(i, 1);
-  //   if (!valid_rect.contains(cv::Point_<float>(x, y))) {
-  //     flag = false;
-  //     break;
-  //   }
-  //   else {
-  //     ++valid_count;
-  //   }
-  // }
-  // if (!flag) {
-  //   return false;
-  // }
-  
+  cv::Rect_<float> valid_rect(0, 0, new_image_size_, new_image_size_);
+  bool flag = true;
+  int valid_count = 0;
+  for (int i = 0; i < tempGroundTruth.rows; ++i)
+  {
+    float x = tempGroundTruth.at<float>(i, 0);
+    float y = tempGroundTruth.at<float>(i, 1);
+    if (!valid_rect.contains(cv::Point_<float>(x, y))) {
+      flag = false;
+      break;
+    }
+    else {
+      ++valid_count;
+    }
+  }
+  if (!flag) {
+    return false;
+  }
   
   cv::Mat iM;
   cv::invertAffineTransform(M, iM);
