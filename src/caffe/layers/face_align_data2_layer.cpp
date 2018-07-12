@@ -206,7 +206,10 @@ void FaceAlignData2Layer<Dtype>::load_batch(FaceAlignBatch<Dtype> *batch)
       flag = generatePerturbation(
         image, cur_shape, face_box, tempImg, tempGroundTruth);
       ++trials;
-    } while((!flag) && trials < max_trials_);
+      if (trials >= max_trials_) {
+        break;
+      }
+    } while(!flag);
 
     if (!flag || trials >= max_trials_) {
       item_id--;
