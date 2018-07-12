@@ -383,18 +383,6 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
   M.at<double>(0, 2) = -(face_box_center.x * M.at<double>(0, 0) + face_box_center.y * M.at<double>(0, 1)) + square_face_box_size / 2;
   M.at<double>(1, 2) = -(face_box_center.x * M.at<double>(1, 0) + face_box_center.y * M.at<double>(1, 1)) + square_face_box_size / 2;
 
-  cv::Mat iM;
-  cv::invertAffineTransform(M, iM);
-
-  cv::Mat warpImage;
-  cv::warpAffine(image, warpImage, iM, cv::Size(square_face_box_size, square_face_box_size),
-    cv::INTER_LINEAR | cv::WARP_INVERSE_MAP);
-
-  cv::Mat imageCopy = image.clone();
-  cv::rectangle(imageCopy, temp_face_box, cv::Scalar(0, 255, 0), 2);
-
-  cv::resize(warpImage, tempImg, cv::Size(new_image_size_, new_image_size_));
-
   tempGroundTruth = groundTruth.clone();
   for (int i = 0; i < groundTruth.rows; ++i)
   {
@@ -407,6 +395,7 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
 
   cv::Rect_<float> valid_rect(0, 0, new_image_size_, new_image_size_);
   bool flag = true;
+  int valid_count = 0;
   for (int i = 0; i < tempGroundTruth.rows; ++i)
   {
     float x = tempGroundTruth.at<float>(i, 0);
@@ -415,8 +404,24 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
       flag = false;
       break;
     }
+    else {
+      ++valid_count;
+    }
   }
-  return flag;
+  if (!flag) {
+    return false;
+  }
+  
+  
+  cv::Mat iM;
+  cv::invertAffineTransform(M, iM);
+
+  cv::Mat warpImage;
+  cv::warpAffine(image, warpImage, iM, cv::Size(square_face_box_size, square_face_box_size),
+    cv::INTER_LINEAR | cv::WARP_INVERSE_MAP);
+
+  cv::resize(warpImage, tempImg, cv::Size(new_image_size_, new_image_size_));
+  return true;
 }
 
 template <typename Dtype>
