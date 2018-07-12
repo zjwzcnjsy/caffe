@@ -385,12 +385,12 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
     return false;
   }
 
-  // cv::Rect_<float> and_face_box = face_box & temp_face_box;
-  // float jaccard_overlap = and_face_box.area() / (face_box.area() + temp_face_box.area() - and_face_box.area());
-  // if (jaccard_overlap < min_jaccard_overlap_)
-  // {
-  //   return false;
-  // }
+  cv::Rect_<float> and_face_box = face_box & temp_face_box;
+  float jaccard_overlap = and_face_box.area() / (face_box.area() + temp_face_box.area() - and_face_box.area());
+  if (jaccard_overlap < min_jaccard_overlap_)
+  {
+    return false;
+  }
 
   cv::Point2f face_box_center(temp_face_box.x + temp_face_box.width / 2.,
                               temp_face_box.y + temp_face_box.height / 2.);
