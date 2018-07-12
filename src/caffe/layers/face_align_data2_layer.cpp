@@ -212,6 +212,7 @@ void FaceAlignData2Layer<Dtype>::load_batch(FaceAlignBatch<Dtype> *batch)
       if (flag) {
         break;
       }
+      std::cout << "trials: " << trials << ", max_trials: " << max_trials_ << std::endl;
     } while(true);
 
     if (!flag || trials >= max_trials_) {
