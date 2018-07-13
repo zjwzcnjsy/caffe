@@ -173,16 +173,7 @@ void FaceAlignDataLayer<Dtype>::load_batch(FaceAlignBatch<Dtype>* batch) {
     // }
     // Apply data transformations (mirror, scale, crop...)
     timer.Start();
-    // random mirror
-    if (random_mirror_) {
-      float mirror_prob;
-      caffe_rng_uniform<float>(1, 0.f, 1.f, &mirror_prob);
-      if (mirror_prob > mirror_prob_) {
-        cv::Mat tempShape = mirrorShape(cur_shape, image);
-        cv::flip(image, image, 1);
-        cur_shape = tempShape;
-      }
-    }
+    
     cv::Mat initLandmark = bestFitRect(cur_shape, mean_shape_);
     cv::Mat tempInit = generatePerturbation(cur_shape, initLandmark, mean_shape_, image);
 
@@ -195,6 +186,17 @@ void FaceAlignDataLayer<Dtype>::load_batch(FaceAlignBatch<Dtype>* batch) {
       tempImg, 
       tempInit2, 
       tempGroundTruth);
+
+    // random mirror
+    if (random_mirror_) {
+      float mirror_prob;
+      caffe_rng_uniform<float>(1, 0.f, 1.f, &mirror_prob);
+      if (mirror_prob > mirror_prob_) {
+        cv::Mat tempShape = mirrorShape(tempGroundTruth, tempImg);
+        cv::flip(tempImg, tempImg, 1);
+        tempGroundTruth = tempShape;
+      }
+    }
 
     // for (int i = 0; i < tempInit.rows; ++i) {
     //   float x = tempInit.at<float>(i, 0);
@@ -384,7 +386,7 @@ cv::Mat FaceAlignDataLayer<Dtype>::generatePerturbation(const cv::Mat& groundTru
     caffe_rng_uniform<float>(1, 0.f, 1.f, &scaling_prob);
     if (scaling_prob > scale_prob_) {
       //caffe_rng_gaussian<float>(1, 1.f, scaleStdDev_, &scaling);
-      caffe_rng_uniform<float>(1, 1.f - scaleStdDev_, 1.f + scaleStdDev_, &scaling);
+      caffe_rng_uniform<float>(1, 1.f - scaleStdDev_ / 2., 1.f + scaleStdDev_, &scaling);
     }
   } else {
     scaling = 1.;
@@ -407,8 +409,8 @@ cv::Mat FaceAlignDataLayer<Dtype>::generatePerturbation(const cv::Mat& groundTru
 
   meanXYOfShape(tempInit, tempInitX, tempInitY);
   for (int i = 0; i < tempInit.rows; ++i) {
-    tempInit.at<float>(i, 0) += -tempInitX;
-    tempInit.at<float>(i, 1) += -tempInitY;
+    tempInit.at<float>(i, 0) -= tempInitX;
+    tempInit.at<float>(i, 1) -= tempInitY;
   }
   cv::Mat R(2, 2, CV_32FC1);
   R.at<float>(0, 0) = cosf(angle);
@@ -416,7 +418,7 @@ cv::Mat FaceAlignDataLayer<Dtype>::generatePerturbation(const cv::Mat& groundTru
   R.at<float>(1, 0) = -sinf(angle);
   R.at<float>(1, 1) = cosf(angle);
   cv::Mat tempInit2;
-  cv::gemm(tempInit, R, 1.f, cv::Mat(), 0.f, tempInit2);
+  cv::gemm(tempInit, R.t(), 1.f, cv::Mat(), 0.f, tempInit2);
   for (int i = 0; i < tempInit2.rows; ++i) {
     tempInit2.at<float>(i, 0) += tempInitX;
     tempInit2.at<float>(i, 1) += tempInitY;
@@ -463,7 +465,6 @@ void FaceAlignDataLayer<Dtype>::cropResizeRotate(
   M.at<float>(0, 2) = t2.at<float>(0, 0);
   M.at<float>(1, 2) = t2.at<float>(0, 1);
   
-  tempImg.create(new_image_size_, new_image_size_, image.type());
   cv::warpAffine(image, tempImg, M, cv::Size(new_image_size_, new_image_size_), 
     cv::INTER_LINEAR | cv::WARP_INVERSE_MAP);
   cv::gemm(initLandmark, A, 1.f, cv::Mat(), 0.f, tempInit);

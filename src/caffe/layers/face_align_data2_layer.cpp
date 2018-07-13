@@ -220,19 +220,6 @@ void FaceAlignData2Layer<Dtype>::load_batch(FaceAlignBatch<Dtype> *batch)
     //   continue;
     // }
 
-    // random mirror
-    if (random_mirror_)
-    {
-      float mirror_prob;
-      caffe_rng_uniform<float>(1, 0.f, 1.f, &mirror_prob);
-      if (mirror_prob > mirror_prob_)
-      {
-        cv::Mat tempShape = mirrorShape(tempGroundTruth, tempImg);
-        cv::flip(tempImg, tempImg, 1);
-        tempGroundTruth = tempShape;
-      }
-    }
-
     // for (int i = 0; i < tempInit.rows; ++i) {
     //   float x = tempInit.at<float>(i, 0);
     //   float y = tempInit.at<float>(i, 1);
@@ -456,6 +443,19 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
     cv::INTER_LINEAR | cv::WARP_INVERSE_MAP);
 
   cv::resize(warpImage, tempImg, cv::Size(new_image_size_, new_image_size_));
+
+  // random mirror
+  if (random_mirror_)
+  {
+    float mirror_prob;
+    caffe_rng_uniform<float>(1, 0.f, 1.f, &mirror_prob);
+    if (mirror_prob > mirror_prob_)
+    {
+      cv::Mat tempShape = mirrorShape(tempGroundTruth, tempImg);
+      cv::flip(tempImg, tempImg, 1);
+      tempGroundTruth = tempShape;
+    }
+  }
   return true;
 }
 
