@@ -201,24 +201,24 @@ void FaceAlignData2Layer<Dtype>::load_batch(FaceAlignBatch<Dtype> *batch)
     
     bool flag = true;
     cv::Mat tempImg, tempGroundTruth;
-    int trials = 0;
-    do {
+    // int trials = 0;
+    // do {
       flag = generatePerturbation(
         image, cur_shape, face_box, tempImg, tempGroundTruth);
-      ++trials;
-      if (trials >= max_trials_) {
-        break;
-      }
-      if (flag) {
-        break;
-      }
-    } while(true);
+    //   ++trials;
+    //   if (trials >= max_trials_) {
+    //     break;
+    //   }
+    //   if (flag) {
+    //     break;
+    //   }
+    // } while(true);
 
-    if (!flag || trials >= max_trials_) {
-      item_id--;
-      Next();
-      continue;
-    }
+    // if (!flag || trials >= max_trials_) {
+    //   item_id--;
+    //   Next();
+    //   continue;
+    // }
 
     // random mirror
     if (random_mirror_)
@@ -367,30 +367,30 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
   temp_face_box.width *= scaling;
   temp_face_box.height *= scaling;
 
-  bool flag = true;
-  int valid_count = 0;
-  for (int i = 0; i < groundTruth.rows; ++i)
-  {
-    float x = groundTruth.at<float>(i, 0);
-    float y = groundTruth.at<float>(i, 1);
-    if (!temp_face_box.contains(cv::Point_<float>(x, y))) {
-      flag = false;
-      break;
-    }
-    else {
-      ++valid_count;
-    }
-  }
-  if (!flag) {
-    return false;
-  }
+  // bool flag = true;
+  // int valid_count = 0;
+  // for (int i = 0; i < groundTruth.rows; ++i)
+  // {
+  //   float x = groundTruth.at<float>(i, 0);
+  //   float y = groundTruth.at<float>(i, 1);
+  //   if (!temp_face_box.contains(cv::Point_<float>(x, y))) {
+  //     flag = false;
+  //     break;
+  //   }
+  //   else {
+  //     ++valid_count;
+  //   }
+  // }
+  // if (!flag) {
+  //   return false;
+  // }
 
-  cv::Rect_<float> and_face_box = face_box & temp_face_box;
-  float jaccard_overlap = and_face_box.area() / (face_box.area() + temp_face_box.area() - and_face_box.area());
-  if (jaccard_overlap < min_jaccard_overlap_)
-  {
-    return false;
-  }
+  // cv::Rect_<float> and_face_box = face_box & temp_face_box;
+  // float jaccard_overlap = and_face_box.area() / (face_box.area() + temp_face_box.area() - and_face_box.area());
+  // if (jaccard_overlap < min_jaccard_overlap_)
+  // {
+  //   return false;
+  // }
 
   cv::Point2f face_box_center(temp_face_box.x + temp_face_box.width / 2.,
                               temp_face_box.y + temp_face_box.height / 2.);
