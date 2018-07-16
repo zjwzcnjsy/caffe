@@ -9,6 +9,7 @@
 #include "caffe/util/io.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/rng.hpp"
+#include "caffe/util/im_transforms.hpp"
 
 namespace caffe {
 
@@ -623,6 +624,17 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
       }
     }
   }
+}
+
+template<typename Dtype>
+void DataTransformer<Dtype>::DistortImage(const cv::Mat& cv_img, 
+  cv::Mat& distorted_cv_img) {
+  if (!param_.has_distort_param()) {
+    distorted_cv_img = cv_img;
+    return;
+  }
+  // Distort the image.
+  distorted_cv_img = ApplyDistort(cv_img, param_.distort_param());
 }
 #endif  // USE_OPENCV
 

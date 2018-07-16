@@ -125,6 +125,11 @@ class DataTransformer {
    *    set_cpu_data() is used. See image_data_layer.cpp for an example.
    */
   void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob);
+
+  /**
+   * @brief Apply distortion to the cv_img.
+   */
+  void DistortImage(const cv::Mat& cv_img, cv::Mat& distorted_cv_img);
 #endif  // USE_OPENCV
 
   /**

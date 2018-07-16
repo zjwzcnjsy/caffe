@@ -198,6 +198,8 @@ void FaceAlignDataLayer<Dtype>::load_batch(FaceAlignBatch<Dtype>* batch) {
       }
     }
 
+    this->data_transformer_->DistortImage(tempImg, tempImg);
+
     // for (int i = 0; i < tempInit.rows; ++i) {
     //   float x = tempInit.at<float>(i, 0);
     //   float y = tempInit.at<float>(i, 1);
