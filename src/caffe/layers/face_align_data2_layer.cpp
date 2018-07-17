@@ -196,29 +196,30 @@ void FaceAlignData2Layer<Dtype>::load_batch(FaceAlignBatch<Dtype> *batch)
     //   cv::circle(image, cv::Point(cur_shape.at<float>(i, 0), cur_shape.at<float>(i, 1)),
     //     2, cv::Scalar(0, 0, 255), 2);
     // }
+
     // Apply data transformations (mirror, scale, crop...)
     timer.Start();
     
     bool flag = true;
     cv::Mat tempImg, tempGroundTruth;
-    // int trials = 0;
-    // do {
+    int trials = 0;
+    do {
       flag = generatePerturbation(
         image, cur_shape, face_box, tempImg, tempGroundTruth);
-    //   ++trials;
-    //   if (trials >= max_trials_) {
-    //     break;
-    //   }
-    //   if (flag) {
-    //     break;
-    //   }
-    // } while(true);
+      ++trials;
+      if (trials >= max_trials_) {
+        break;
+      }
+      if (flag) {
+        break;
+      }
+    } while(true);
 
-    // if (!flag || trials >= max_trials_) {
-    //   item_id--;
-    //   Next();
-    //   continue;
-    // }
+    if (!flag || trials >= max_trials_) {
+      item_id--;
+      Next();
+      continue;
+    }
 
     // for (int i = 0; i < tempInit.rows; ++i) {
     //   float x = tempInit.at<float>(i, 0);
@@ -293,7 +294,7 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
   if (random_rotation_)
   {
     caffe_rng_uniform<double>(1, 0.f, 1.f, &rotation_prob);
-    if (rotation_prob > rotation_prob_)
+    if (rotation_prob < rotation_prob_)
     {
       //caffe_rng_gaussian<double>(1, 0.f, rotationStdDevRad, &angle);
       caffe_rng_uniform<double>(1, -rotationStdDevRad, rotationStdDevRad, &angle);
@@ -307,7 +308,7 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
   if (random_translationX_)
   {
     caffe_rng_uniform<double>(1, 0.f, 1.f, &offsetX_prob);
-    if (offsetX_prob > translationX_prob_)
+    if (offsetX_prob < translationX_prob_)
     {
       //caffe_rng_gaussian<double>(1, 0.f, translationXStdDev, &offsetX);
       caffe_rng_uniform<double>(1, -translationXStdDev, translationXStdDev, &offsetX);
@@ -321,7 +322,7 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
   if (random_translationY_)
   {
     caffe_rng_uniform<double>(1, 0.f, 1.f, &offsetY_prob);
-    if (offsetY_prob > translationY_prob_)
+    if (offsetY_prob < translationY_prob_)
     {
       //caffe_rng_gaussian<double>(1, 0.f, translationYStdDev, &offsetY);
       caffe_rng_uniform<double>(1, -translationYStdDev, translationYStdDev, &offsetY);
@@ -334,7 +335,7 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
   if (random_scale_)
   {
     caffe_rng_uniform<double>(1, 0.f, 1.f, &scaling_prob);
-    if (scaling_prob > scale_prob_)
+    if (scaling_prob < scale_prob_)
     {
       //caffe_rng_gaussian<double>(1, 1.f, scaleStdDev_, &scaling);
       caffe_rng_uniform<double>(1, 1.f - scaleStdDev_, 1.f + scaleStdDev_, &scaling);
@@ -354,57 +355,47 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
   temp_face_box.width *= scaling;
   temp_face_box.height *= scaling;
 
-  // bool flag = true;
-  // int valid_count = 0;
-  // for (int i = 0; i < groundTruth.rows; ++i)
-  // {
-  //   float x = groundTruth.at<float>(i, 0);
-  //   float y = groundTruth.at<float>(i, 1);
-  //   if (!temp_face_box.contains(cv::Point_<float>(x, y))) {
-  //     flag = false;
-  //     break;
-  //   }
-  //   else {
-  //     ++valid_count;
-  //   }
-  // }
-  // if (!flag) {
-  //   return false;
-  // }
 
-  // cv::Rect_<float> and_face_box = face_box & temp_face_box;
-  // float jaccard_overlap = and_face_box.area() / (face_box.area() + temp_face_box.area() - and_face_box.area());
-  // if (jaccard_overlap < min_jaccard_overlap_)
-  // {
-  //   return false;
-  // }
-
-  cv::Point2f face_box_center(temp_face_box.x + temp_face_box.width / 2.,
+  cv::Point2f face_box_center(face_box.x + face_box.width / 2.,
+                              face_box.y + face_box.height / 2.);
+  cv::Point2f temp_face_box_center(temp_face_box.x + temp_face_box.width / 2.,
                               temp_face_box.y + temp_face_box.height / 2.);
-  double square_face_box_size = std::max(temp_face_box.width, temp_face_box.height);
-  // temp_face_box.x = face_box_center.x - square_face_box_size / 2.;
-  // temp_face_box.y = face_box_center.y - square_face_box_size / 2.;
-  // temp_face_box.width = square_face_box_size;
-  // temp_face_box.height = square_face_box_size;
 
-  // cv::Mat imageCopy = image.clone();
-  // cv::rectangle(imageCopy, temp_face_box, 
-  //   cv::Scalar(0, 255, 0), 4);
-  // cv::circle(imageCopy, face_box_center, 2, cv::Scalar(255, 0, 0), 2);
-  // cv::putText(imageCopy, cv::format("%.2f", angle), face_box_center, cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0, 0, 255), 2);
-  
   double w = temp_face_box.width;
   double h = temp_face_box.height;
   double angle_abs = abs(angle);
-  square_face_box_size = std::max(w*cos(angle_abs)+h*sin(angle_abs), w*sin(angle_abs)+h*cos(angle_abs));
+  double square_temp_face_box_size = std::max(w*cos(angle_abs)+h*sin(angle_abs), w*sin(angle_abs)+h*cos(angle_abs));
+  w = face_box.width;
+  h = face_box.height;
+  double square_face_box_size = std::max(w*cos(angle_abs)+h*sin(angle_abs), w*sin(angle_abs)+h*cos(angle_abs));
+
+  cv::Rect_<float> face_box2;
+  face_box2.x = face_box_center.x - square_face_box_size / 2.;
+  face_box2.y = face_box_center.y - square_face_box_size / 2.;
+  face_box2.width = square_face_box_size;
+  face_box2.height = square_face_box_size;
+
+  cv::Rect_<float> temp_face_box2;
+  temp_face_box2.x = temp_face_box_center.x - square_temp_face_box_size / 2.;
+  temp_face_box2.y = temp_face_box_center.y - square_temp_face_box_size / 2.;
+  temp_face_box2.width = square_temp_face_box_size;
+  temp_face_box2.height = square_temp_face_box_size;
+
+  cv::Rect_<float> and_face_box = face_box2 & temp_face_box2;
+  float jaccard_overlap = and_face_box.area() / (face_box2.area() + temp_face_box2.area() - and_face_box.area());
+  if (jaccard_overlap < min_jaccard_overlap_)
+  {
+    return false;
+  }
+
 
   cv::Mat M(2, 3, CV_64FC1);
   M.at<double>(0, 0) = cos(angle);
   M.at<double>(0, 1) = sin(angle);
   M.at<double>(1, 0) = -sin(angle);
   M.at<double>(1, 1) = cos(angle);
-  M.at<double>(0, 2) = -(face_box_center.x * M.at<double>(0, 0) + face_box_center.y * M.at<double>(0, 1)) + square_face_box_size / 2;
-  M.at<double>(1, 2) = -(face_box_center.x * M.at<double>(1, 0) + face_box_center.y * M.at<double>(1, 1)) + square_face_box_size / 2;
+  M.at<double>(0, 2) = -(temp_face_box_center.x * M.at<double>(0, 0) + temp_face_box_center.y * M.at<double>(0, 1)) + square_temp_face_box_size / 2;
+  M.at<double>(1, 2) = -(temp_face_box_center.x * M.at<double>(1, 0) + temp_face_box_center.y * M.at<double>(1, 1)) + square_temp_face_box_size / 2;
 
   tempGroundTruth = groundTruth.clone();
   for (int i = 0; i < groundTruth.rows; ++i)
@@ -414,32 +405,32 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
     tempGroundTruth.at<float>(i, 0) = M.at<double>(0, 0) * x + M.at<double>(0, 1) * y + M.at<double>(0, 2);
     tempGroundTruth.at<float>(i, 1) = M.at<double>(1, 0) * x + M.at<double>(1, 1) * y + M.at<double>(1, 2);
   }
-  tempGroundTruth *= new_image_size_ / square_face_box_size;
+  tempGroundTruth *= new_image_size_ / square_temp_face_box_size;
 
-  // cv::Rect_<float> valid_rect(0, 0, new_image_size_, new_image_size_);
-  // bool flag = true;
-  // int valid_count = 0;
-  // for (int i = 0; i < tempGroundTruth.rows; ++i)
-  // {
-  //   float x = tempGroundTruth.at<float>(i, 0);
-  //   float y = tempGroundTruth.at<float>(i, 1);
-  //   if (!valid_rect.contains(cv::Point_<float>(x, y))) {
-  //     flag = false;
-  //     break;
-  //   }
-  //   else {
-  //     ++valid_count;
-  //   }
-  // }
-  // if (!flag) {
-  //   return false;
-  // }
+  cv::Rect_<float> valid_rect(0, 0, new_image_size_, new_image_size_);
+  bool flag = true;
+  int valid_count = 0;
+  for (int i = 0; i < tempGroundTruth.rows; ++i)
+  {
+    float x = tempGroundTruth.at<float>(i, 0);
+    float y = tempGroundTruth.at<float>(i, 1);
+    if (!valid_rect.contains(cv::Point_<float>(x, y))) {
+      flag = false;
+      break;
+    }
+    else {
+      ++valid_count;
+    }
+  }
+  if (!flag) {
+    return false;
+  }
   
   cv::Mat iM;
   cv::invertAffineTransform(M, iM);
 
   cv::Mat warpImage;
-  cv::warpAffine(image, warpImage, iM, cv::Size(square_face_box_size, square_face_box_size),
+  cv::warpAffine(image, warpImage, iM, cv::Size(square_temp_face_box_size, square_temp_face_box_size),
     cv::INTER_LINEAR | cv::WARP_INVERSE_MAP);
 
   cv::resize(warpImage, tempImg, cv::Size(new_image_size_, new_image_size_));
@@ -449,7 +440,7 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
   {
     float mirror_prob;
     caffe_rng_uniform<float>(1, 0.f, 1.f, &mirror_prob);
-    if (mirror_prob > mirror_prob_)
+    if (mirror_prob < mirror_prob_)
     {
       cv::Mat tempShape = mirrorShape(tempGroundTruth, tempImg);
       cv::flip(tempImg, tempImg, 1);
