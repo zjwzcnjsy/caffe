@@ -64,6 +64,10 @@ message FaceAlignDatum {
   optional float bbox_y = 7;
   optional float bbox_w = 8;
   optional float bbox_h = 9;
+
+  optional float yaw = 10;
+  optional float pitch = 11;
+  optional float row = 12;
 }
 
 message FillerParameter {

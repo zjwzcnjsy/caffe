@@ -112,6 +112,18 @@ void FaceAlignDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& botto
       << "output label size: " << top[1]->num() << ","
       << top[1]->channels();
   }
+  if (top.size() >= 3) {
+    vector<int> pose_shape(2);
+    pose_shape[0] = batch_size;
+    pose_shape[1] = 3;
+    top[2]->Reshape(pose_shape);
+    for (int i = 0; i < this->prefetch_.size(); ++i) {
+      this->prefetch_[i]->pose_.Reshape(pose_shape);
+    }
+    LOG_IF(INFO, Caffe::root_solver())
+      << "output label size: " << top[2]->num() << ","
+      << top[2]->channels();
+  }
 }
 
 template <typename Dtype>
@@ -150,8 +162,15 @@ void FaceAlignDataLayer<Dtype>::load_batch(FaceAlignBatch<Dtype>* batch) {
 
   FaceAlignDatum datum;
   cv::Mat cur_shape(num_landmark_, 2, CV_32FC1);
+  float cur_yaw = 0., cur_pitch = 0., cur_row = 0.;
   vector<cv::Mat> batchSampleImages(batch_size);
   vector<cv::Mat> batchSampleShapes(batch_size);
+  vector<float> batchYaw(batch_size);
+  vector<float> batchPitch(batch_size);
+  vector<float> batchRow(batch_size);
+  vector<float> batchAngle(batch_size);
+  vector<int> batchMirrorFlag(batch_size);
+
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     timer.Start();
     while (Skip()) {
@@ -167,6 +186,11 @@ void FaceAlignDataLayer<Dtype>::load_batch(FaceAlignBatch<Dtype>* batch) {
         cur_shape.at<float>(i, j) = datum.label(i * 2 + j);
       }
     }
+    if (batch->has_pose_) {
+      cur_yaw = datum.yaw();
+      cur_pitch = datum.pitch();
+      cur_row = datum.row();
+    }
     // for (int i = 0; i < num_landmark_; ++i) {
     //   cv::circle(image, cv::Point(cur_shape.at<float>(i, 0), cur_shape.at<float>(i, 1)),
     //     2, cv::Scalar(0, 0, 255), 2);
@@ -175,8 +199,12 @@ void FaceAlignDataLayer<Dtype>::load_batch(FaceAlignBatch<Dtype>* batch) {
     timer.Start();
     
     cv::Mat initLandmark = bestFitRect(cur_shape, mean_shape_);
-    cv::Mat tempInit = generatePerturbation(cur_shape, initLandmark, mean_shape_, image);
-
+    float angle = 0.;
+    cv::Mat tempInit = generatePerturbation(cur_shape, initLandmark, mean_shape_, image, angle);
+    if (batch->has_pose_) {
+      cur_row += angle;
+      batchAngle[item_id] = angle;
+    }
     cv::Mat tempImg, tempInit2, tempGroundTruth;
     cropResizeRotate(
       mean_shape_, 
@@ -195,6 +223,14 @@ void FaceAlignDataLayer<Dtype>::load_batch(FaceAlignBatch<Dtype>* batch) {
         cv::Mat tempShape = mirrorShape(tempGroundTruth, tempImg);
         cv::flip(tempImg, tempImg, 1);
         tempGroundTruth = tempShape;
+        if (batch->has_pose_) {
+          cur_yaw = -cur_yaw;
+          cur_row = -cur_row;
+        }
+        batchMirrorFlag[item_id] = 1;
+      }
+      else {
+        batchMirrorFlag[item_id] = 0;
       }
     }
 
@@ -227,6 +263,15 @@ void FaceAlignDataLayer<Dtype>::load_batch(FaceAlignBatch<Dtype>* batch) {
         }
       }
     }
+    if (batch->has_pose_) {
+      Dtype* top_pose = batch->pose_.mutable_cpu_data() + item_id * batch->pose_.channels();
+      top_pose[0] = cur_yaw / 90.;
+      top_pose[1] = cur_pitch / 90.;
+      top_pose[2] = cur_row / 90.;
+      batchYaw[item_id] = cur_yaw;
+      batchPitch[item_id] = cur_pitch;
+      batchRow[item_id] = cur_row;
+    }
     trans_time += timer.MicroSeconds();
     Next();
   }
@@ -237,6 +282,10 @@ void FaceAlignDataLayer<Dtype>::load_batch(FaceAlignBatch<Dtype>* batch) {
       for (int j = 0; j < num_landmark_; ++j) {
         cv::circle(image, cv::Point(shape.at<float>(j, 0), shape.at<float>(j, 1)), 1, cv::Scalar(0, 255, 0), 1);
       }
+      cv::putText(image, cv::format("#%d#%.2f#%.2f#%.2f$%.2f", batchMirrorFlag[i],
+                            batchYaw[i], batchPitch[i], batchRow[i], batchAngle[i]),
+                            cv::Point(0, 30), cv::FONT_HERSHEY_SIMPLEX,
+                            0.5, cv::Scalar(0, 0, 255), 1);
       cv::imshow(cv::format("image@%d", i), image);
     }
     cv::waitKey(visualation_step_);
@@ -335,7 +384,8 @@ template <typename Dtype>
 cv::Mat FaceAlignDataLayer<Dtype>::generatePerturbation(const cv::Mat& groundTruth, 
       const cv::Mat& initLandmark,
       const cv::Mat& meanShape, 
-      const cv::Mat& image) {
+      const cv::Mat& image,
+      float& angle) {
   cv::Rect_<float> boxRect;
   boundingRect(meanShape, boxRect);
   float meanShapeSize = std::max<float>(boxRect.height, boxRect.width);
@@ -353,16 +403,16 @@ cv::Mat FaceAlignDataLayer<Dtype>::generatePerturbation(const cv::Mat& groundTru
   cv::Mat tempInit = initLandmark.clone();
 
   float rotation_prob, offsetX_prob, offsetY_prob, scaling_prob;
-  float angle = 0., offsetX = 0., offsetY = 0., scaling = 1.;
+  float angle2 = 0., offsetX = 0., offsetY = 0., scaling = 1.;
   if (random_rotation_) {
     caffe_rng_uniform<float>(1, 0.f, 1.f, &rotation_prob);
     if (rotation_prob > rotation_prob_) {
-      //caffe_rng_gaussian<float>(1, 0.f, rotationStdDevRad, &angle);
-      caffe_rng_uniform<float>(1, -rotationStdDevRad, rotationStdDevRad, &angle);
+      //caffe_rng_gaussian<float>(1, 0.f, rotationStdDevRad, &angle2);
+      caffe_rng_uniform<float>(1, -rotationStdDevRad, rotationStdDevRad, &angle2);
     }
   }
   else {
-    angle = 0.;
+    angle2 = 0.;
   }
 
   if (random_translationX_) {
@@ -415,16 +465,18 @@ cv::Mat FaceAlignDataLayer<Dtype>::generatePerturbation(const cv::Mat& groundTru
     tempInit.at<float>(i, 1) -= tempInitY;
   }
   cv::Mat R(2, 2, CV_32FC1);
-  R.at<float>(0, 0) = cosf(angle);
-  R.at<float>(0, 1) = sinf(angle);
-  R.at<float>(1, 0) = -sinf(angle);
-  R.at<float>(1, 1) = cosf(angle);
+  R.at<float>(0, 0) = cosf(angle2);
+  R.at<float>(0, 1) = sinf(angle2);
+  R.at<float>(1, 0) = -sinf(angle2);
+  R.at<float>(1, 1) = cosf(angle2);
   cv::Mat tempInit2;
   cv::gemm(tempInit, R.t(), 1.f, cv::Mat(), 0.f, tempInit2);
   for (int i = 0; i < tempInit2.rows; ++i) {
     tempInit2.at<float>(i, 0) += tempInitX;
     tempInit2.at<float>(i, 1) += tempInitY;
   }
+
+  angle = angle2 / CV_PI * 180.;
   return tempInit2;
 }
 

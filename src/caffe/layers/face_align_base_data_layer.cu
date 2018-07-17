@@ -19,6 +19,11 @@ void FaceAlignBasePrefetchingDataLayer<Dtype>::Forward_gpu(
     top[1]->ReshapeLike(prefetch_current_->label_);
     top[1]->set_gpu_data(prefetch_current_->label_.mutable_gpu_data());
   }
+  if (prefetch_current_->has_pose_) {
+    // Reshape to loaded pose.
+    top[2]->ReshapeLike(prefetch_current_->pose_);
+    top[2]->set_gpu_data(prefetch_current_->pose_.mutable_gpu_data());
+  }
 }
 
 INSTANTIATE_LAYER_GPU_FORWARD(FaceAlignBasePrefetchingDataLayer);

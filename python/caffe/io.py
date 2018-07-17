@@ -98,7 +98,7 @@ def array_to_multi_label_datum(arr, label=None):
     return datum
 
 
-def array_to_face_align_datum(arr, label=None, bbox=None):
+def array_to_face_align_datum(arr, label=None, bbox=None, pose=None):
     """Converts a 3-dimensional array to datum. If the array has dtype uint8,
     the output data will be encoded as a string. Otherwise, the output data
     will be stored in float format.
@@ -113,6 +113,10 @@ def array_to_face_align_datum(arr, label=None, bbox=None):
         datum.label.extend(label.astype(float).flat)
     if bbox is not None:
         datum.bbox_x, datum.bbox_y, datum.bbox_w, datum.bbox_h = bbox
+    if pose is not None:
+        datum.yaw = pose[0]
+        datum.pitch = pose[1]
+        datum.row = pose[2]
     return datum
 
 
@@ -139,13 +143,26 @@ def multi_label_datum_to_array(datum):
             datum.channels, datum.height, datum.width), np.array(datum.label).astype(float)
 
 
-def face_align_datum_to_array(datum):
+def face_align_datum_to_array(datum, has_box=False, has_pose=False):
     """Converts a datum to an array. Note that the label is not returned,
     as one can easily get it by calling datum.label.
     """
     assert len(datum.data) > 0
-    return np.fromstring(datum.data, dtype=np.uint8).reshape(
-        datum.channels, datum.height, datum.width), np.array(datum.label).astype(float)
+    data = np.fromstring(datum.data, dtype=np.uint8).reshape(
+        datum.channels, datum.height, datum.width)
+    label = np.array(datum.label).astype(float)
+    if has_box:
+        box = np.array([datum.bbox_x, datum.bbox_y, datum.bbox_w, datum.bbox_h], dtype=np.float32)
+    if has_pose:
+        pose = np.array([datum.yaw, datum.pitch, datum.row], dtype=np.float32)
+    if has_box and has_pose:
+        return data, label, box, pose
+    if has_box and not has_pose:
+        return data, label, box
+    if not has_box and has_pose:
+        return data, label, pose
+    if not has_box and not has_pose:
+        return data, label
 
 ## Pre-processing
 

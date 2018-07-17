@@ -37,6 +37,10 @@ void FaceAlignBasePrefetchingDataLayer<Dtype>::LayerSetUp(
     if (this->output_labels_) {
       prefetch_[i]->label_.mutable_cpu_data();
     }
+    if (top.size() >= 3) {
+      prefetch_[i]->has_pose_ = true;
+      prefetch_[i]->pose_.mutable_cpu_data();
+    }
   }
 #ifndef CPU_ONLY
   if (Caffe::mode() == Caffe::GPU) {
@@ -44,6 +48,10 @@ void FaceAlignBasePrefetchingDataLayer<Dtype>::LayerSetUp(
       prefetch_[i]->data_.mutable_gpu_data();
       if (this->output_labels_) {
         prefetch_[i]->label_.mutable_gpu_data();
+      }
+      if (top.size() >= 3) {
+        prefetch_[i]->has_pose_ = true;
+        prefetch_[i]->pose_.mutable_gpu_data();
       }
     }
   }
@@ -102,6 +110,11 @@ void FaceAlignBasePrefetchingDataLayer<Dtype>::Forward_cpu(
     // Reshape to loaded labels.
     top[1]->ReshapeLike(prefetch_current_->label_);
     top[1]->set_cpu_data(prefetch_current_->label_.mutable_cpu_data());
+  }
+  if (prefetch_current_->has_pose_) {
+    // Reshape to loaded pose.
+    top[2]->ReshapeLike(prefetch_current_->pose_);
+    top[2]->set_cpu_data(prefetch_current_->pose_.mutable_cpu_data());
   }
 }
 

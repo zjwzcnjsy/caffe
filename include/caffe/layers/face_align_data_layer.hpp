@@ -22,15 +22,16 @@ class FaceAlignDataLayer : public FaceAlignBasePrefetchingDataLayer<Dtype> {
       const vector<Blob<Dtype>*>& top);
   virtual inline const char* type() const { return "FaceAlignData"; }
   virtual inline int ExactNumBottomBlobs() const { return 0; }
-  virtual inline int MinTopBlobs() const { return 1; }
-  virtual inline int MaxTopBlobs() const { return 2; }
+  virtual inline int MinTopBlobs() const { return 2; }
+  virtual inline int MaxTopBlobs() const { return 3; }
 
   cv::Mat bestFitRect(const cv::Mat& groundTruth, const cv::Mat& meanShape);
   cv::Mat mirrorShape(const cv::Mat& groundTruth, const cv::Mat& image);
   cv::Mat generatePerturbation(const cv::Mat& groundTruth, 
       const cv::Mat& initLandmark,
       const cv::Mat& meanShape, 
-      const cv::Mat& image);
+      const cv::Mat& image,
+      float& angle);
   void cropResizeRotate(
       const cv::Mat& meanShape,
       const cv::Mat& image, 

@@ -16,7 +16,8 @@ namespace caffe {
 template <typename Dtype>
 class FaceAlignBatch {
  public:
-  Blob<Dtype> data_, label_;
+  Blob<Dtype> data_, label_, pose_;
+  bool has_pose_;
 };
 
 template <typename Dtype>
