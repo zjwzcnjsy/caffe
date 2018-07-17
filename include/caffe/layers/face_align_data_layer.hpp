@@ -32,7 +32,7 @@ class FaceAlignDataLayer : public FaceAlignBasePrefetchingDataLayer<Dtype> {
       const cv::Mat& meanShape, 
       const cv::Mat& image,
       float& angle);
-  void cropResizeRotate(
+  bool cropResizeRotate(
       const cv::Mat& meanShape,
       const cv::Mat& image, 
       const cv::Mat& initLandmark, 
@@ -80,6 +80,9 @@ class FaceAlignDataLayer : public FaceAlignBasePrefetchingDataLayer<Dtype> {
 
   bool visualation_;
   int visualation_step_;
+
+  float min_jaccard_overlap_;
+  int max_trials_;
 };
 
 }  // namespace caffe
