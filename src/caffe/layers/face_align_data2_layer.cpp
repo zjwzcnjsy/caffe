@@ -271,9 +271,9 @@ void FaceAlignData2Layer<Dtype>::load_batch(FaceAlignBatch<Dtype> *batch)
   }
   timer.Stop();
   batch_timer.Stop();
-  LOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";
-  LOG(INFO) << "     Read time: " << read_time / 1000 << " ms.";
-  LOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
+  DLOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";
+  DLOG(INFO) << "     Read time: " << read_time / 1000 << " ms.";
+  DLOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
 }
 
 template <typename Dtype>
