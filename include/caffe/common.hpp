@@ -97,6 +97,8 @@ using std::vector;
 #define snprintf _snprintf
 #endif
 
+#define CAFFE_PI   3.1415926535897932384626433832795
+
 // A global initialization function that you should call in your main function.
 // Currently it initializes google flags and google logging.
 void GlobalInit(int* pargc, char*** pargv);

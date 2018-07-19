@@ -56,7 +56,9 @@ Dtype SGDSolver<Dtype>::GetLearningRate() {
     rate = this->param_.base_lr() * (Dtype(1.) /
         (Dtype(1.) + exp(-this->param_.gamma() * (Dtype(this->iter_) -
           Dtype(this->param_.stepsize())))));
-  } else {
+  } else if (lr_policy == "cosine") {
+    rate = this->param_.base_lr() * cosf(CAFFE_PI / 2.f * this->iter_ / this->param_.max_iter());
+  }else {
     LOG(FATAL) << "Unknown learning rate policy: " << lr_policy;
   }
   return rate;
