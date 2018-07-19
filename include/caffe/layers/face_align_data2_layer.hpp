@@ -33,6 +33,7 @@ class FaceAlignData2Layer : public FaceAlignBasePrefetchingDataLayer<Dtype> {
       const cv::Rect_<float>& face_box,
       cv::Mat& tempImg,
       cv::Mat& tempGroundTruth);
+  void ApplyNoise(const cv::Mat& in_image, cv::Mat& out_image);
   
   void bestFitMat(const cv::Mat& destination, const cv::Mat& source, cv::Mat& A, cv::Mat& t);
 
@@ -70,6 +71,11 @@ class FaceAlignData2Layer : public FaceAlignBasePrefetchingDataLayer<Dtype> {
   float scale_prob_;
   bool random_scale_;
   float scaleStdDev_;
+
+  bool gauss_blur_;
+  float gauss_blur_prob_;
+  int gauss_kernel_size_;
+  float gauss_sigma_;
 
   bool visualation_;
   int visualation_step_;

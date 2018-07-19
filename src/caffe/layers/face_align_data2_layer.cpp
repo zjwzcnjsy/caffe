@@ -46,6 +46,11 @@ FaceAlignData2Layer<Dtype>::FaceAlignData2Layer(const LayerParameter &param)
   random_scale_ = param.face_align_data_param().random_scale();
   scaleStdDev_ = param.face_align_data_param().scalestddev();
 
+  gauss_blur_ = param.face_align_data_param().gauss_blur();
+  gauss_blur_prob_ = param.face_align_data_param().gauss_blur_prob();
+  gauss_kernel_size_ = param.face_align_data_param().gauss_kernel_size();
+  gauss_sigma_ = param.face_align_data_param().gauss_sigma();
+
   visualation_ = param.face_align_data_param().visualation();
   visualation_step_ = param.face_align_data_param().visualation_step();
 
@@ -447,7 +452,24 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
       tempGroundTruth = tempShape;
     }
   }
+
+  if (gauss_blur_) {
+    ApplyNoise(tempImg, tempImg);
+  }
   return true;
+}
+
+template <typename Dtype>
+void FaceAlignData2Layer<Dtype>::ApplyNoise(const cv::Mat& in_image, cv::Mat& out_image) {
+  double blur_prob = 0;
+  caffe_rng_uniform<double>(1, 0.f, 1.f, &blur_prob);
+  if (blur_prob < gauss_blur_prob_)
+  {
+    cv::GaussianBlur(in_image, out_image, cv::Size(gauss_kernel_size_, gauss_kernel_size_), gauss_sigma_);
+  }
+  else {
+    out_image = in_image;
+  }
 }
 
 template <typename Dtype>
