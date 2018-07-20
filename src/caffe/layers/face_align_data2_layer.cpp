@@ -56,6 +56,7 @@ FaceAlignData2Layer<Dtype>::FaceAlignData2Layer(const LayerParameter &param)
 
   max_trials_ = param.face_align_data_param().max_trials();
   min_jaccard_overlap_ = param.face_align_data_param().min_jaccard_overlap();
+  landmark_vision_ = param.face_align_data_param().landmark_vision();
 
   const string &mean_shape_file = param.face_align_data_param().mean_shape_file();
   if (Caffe::root_solver())
@@ -204,23 +205,27 @@ void FaceAlignData2Layer<Dtype>::load_batch(FaceAlignBatch<Dtype> *batch)
 
     // Apply data transformations (mirror, scale, crop...)
     timer.Start();
-    
+
     bool flag = true;
     cv::Mat tempImg, tempGroundTruth;
     int trials = 0;
-    do {
+    do
+    {
       flag = generatePerturbation(
-        image, cur_shape, face_box, tempImg, tempGroundTruth);
+          image, cur_shape, face_box, tempImg, tempGroundTruth);
       ++trials;
-      if (trials >= max_trials_) {
+      if (trials >= max_trials_)
+      {
         break;
       }
-      if (flag) {
+      if (flag)
+      {
         break;
       }
-    } while(true);
+    } while (true);
 
-    if (!flag || trials >= max_trials_) {
+    if (!flag || trials >= max_trials_)
+    {
       item_id--;
       Next();
       continue;
@@ -235,7 +240,8 @@ void FaceAlignData2Layer<Dtype>::load_batch(FaceAlignBatch<Dtype> *batch)
     //   cv::circle(image, cv::Point(x, y), 1, cv::Scalar(255, 255, 255), 1);
     // }
     // cv::imshow(cv::format("img#%d", item_id), image);
-    if (visualation_) {
+    if (visualation_)
+    {
       batchSampleImages[item_id] = tempImg.clone();
       batchSampleShapes[item_id] = tempGroundTruth.clone();
     }
@@ -360,19 +366,18 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
   temp_face_box.width *= scaling;
   temp_face_box.height *= scaling;
 
-
   cv::Point2f face_box_center(face_box.x + face_box.width / 2.,
                               face_box.y + face_box.height / 2.);
   cv::Point2f temp_face_box_center(temp_face_box.x + temp_face_box.width / 2.,
-                              temp_face_box.y + temp_face_box.height / 2.);
+                                   temp_face_box.y + temp_face_box.height / 2.);
 
   double w = temp_face_box.width;
   double h = temp_face_box.height;
   double angle_abs = abs(angle);
-  double square_temp_face_box_size = std::max(w*cos(angle_abs)+h*sin(angle_abs), w*sin(angle_abs)+h*cos(angle_abs));
+  double square_temp_face_box_size = std::max(w * cos(angle_abs) + h * sin(angle_abs), w * sin(angle_abs) + h * cos(angle_abs));
   w = face_box.width;
   h = face_box.height;
-  double square_face_box_size = std::max(w*cos(angle_abs)+h*sin(angle_abs), w*sin(angle_abs)+h*cos(angle_abs));
+  double square_face_box_size = std::max(w * cos(angle_abs) + h * sin(angle_abs), w * sin(angle_abs) + h * cos(angle_abs));
 
   cv::Rect_<float> face_box2;
   face_box2.x = face_box_center.x - square_face_box_size / 2.;
@@ -393,7 +398,6 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
     return false;
   }
 
-
   cv::Mat M(2, 3, CV_64FC1);
   M.at<double>(0, 0) = cos(angle);
   M.at<double>(0, 1) = sin(angle);
@@ -412,31 +416,37 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
   }
   tempGroundTruth *= new_image_size_ / square_temp_face_box_size;
 
-  cv::Rect_<float> valid_rect(0, 0, new_image_size_, new_image_size_);
-  bool flag = true;
-  int valid_count = 0;
-  for (int i = 0; i < tempGroundTruth.rows; ++i)
+  if (landmark_vision_)
   {
-    float x = tempGroundTruth.at<float>(i, 0);
-    float y = tempGroundTruth.at<float>(i, 1);
-    if (!valid_rect.contains(cv::Point_<float>(x, y))) {
-      flag = false;
-      break;
+    cv::Rect_<float> valid_rect(0, 0, new_image_size_, new_image_size_);
+    bool flag = true;
+    int valid_count = 0;
+    for (int i = 0; i < tempGroundTruth.rows; ++i)
+    {
+      float x = tempGroundTruth.at<float>(i, 0);
+      float y = tempGroundTruth.at<float>(i, 1);
+      if (!valid_rect.contains(cv::Point_<float>(x, y)))
+      {
+        flag = false;
+        break;
+      }
+      else
+      {
+        ++valid_count;
+      }
     }
-    else {
-      ++valid_count;
+    if (!flag)
+    {
+      return false;
     }
   }
-  if (!flag) {
-    return false;
-  }
-  
+
   cv::Mat iM;
   cv::invertAffineTransform(M, iM);
 
   cv::Mat warpImage;
   cv::warpAffine(image, warpImage, iM, cv::Size(square_temp_face_box_size, square_temp_face_box_size),
-    cv::INTER_LINEAR | cv::WARP_INVERSE_MAP);
+                 cv::INTER_LINEAR | cv::WARP_INVERSE_MAP);
 
   cv::resize(warpImage, tempImg, cv::Size(new_image_size_, new_image_size_));
 
@@ -453,21 +463,24 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
     }
   }
 
-  if (gauss_blur_) {
+  if (gauss_blur_)
+  {
     ApplyNoise(tempImg, tempImg);
   }
   return true;
 }
 
 template <typename Dtype>
-void FaceAlignData2Layer<Dtype>::ApplyNoise(const cv::Mat& in_image, cv::Mat& out_image) {
+void FaceAlignData2Layer<Dtype>::ApplyNoise(const cv::Mat &in_image, cv::Mat &out_image)
+{
   double blur_prob = 0;
   caffe_rng_uniform<double>(1, 0.f, 1.f, &blur_prob);
   if (blur_prob < gauss_blur_prob_)
   {
     cv::GaussianBlur(in_image, out_image, cv::Size(gauss_kernel_size_, gauss_kernel_size_), gauss_sigma_);
   }
-  else {
+  else
+  {
     out_image = in_image;
   }
 }

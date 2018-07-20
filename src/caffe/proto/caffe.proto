@@ -1509,16 +1509,17 @@ message FaceAlignDataParameter {
   optional bool random_scale = 17 [default = false];
   optional float scaleStdDev = 18 [default = 0.05];
 
-  optional bool visualation = 19 [default = false];
-  optional int32 visualation_step = 20 [default = -1];
+  optional bool gauss_blur = 19 [default = false];
+  optional float gauss_blur_prob = 20 [default = 0.5];
+  optional int32 gauss_kernel_size = 21 [default = 3];
+  optional float gauss_sigma = 22 [default = 0.8];
 
-  optional int32 max_trials = 21 [default=100];
-  optional float min_jaccard_overlap = 22 [default = 0.0];
+  optional int32 max_trials = 23 [default=100];
+  optional bool landmark_vision = 24 [default = true];
+  optional float min_jaccard_overlap = 25 [default = 0.0];
 
-  optional bool gauss_blur = 23 [default = false];
-  optional float gauss_blur_prob = 24 [default = 0.5];
-  optional int32 gauss_kernel_size = 25 [default = 3];
-  optional float gauss_sigma = 26 [default = 0.8];
+  optional bool visualation = 26 [default = false];
+  optional int32 visualation_step = 27 [default = -1];
 }
 
 

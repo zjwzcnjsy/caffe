@@ -82,6 +82,7 @@ class FaceAlignData2Layer : public FaceAlignBasePrefetchingDataLayer<Dtype> {
 
   float min_jaccard_overlap_;
   int max_trials_;
+  bool landmark_vision_;
 };
 
 }  // namespace caffe
