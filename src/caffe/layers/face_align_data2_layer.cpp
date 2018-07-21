@@ -57,6 +57,7 @@ FaceAlignData2Layer<Dtype>::FaceAlignData2Layer(const LayerParameter &param)
   max_trials_ = param.face_align_data_param().max_trials();
   min_jaccard_overlap_ = param.face_align_data_param().min_jaccard_overlap();
   landmark_vision_ = param.face_align_data_param().landmark_vision();
+  random_event_permutations_equally_prob_ = param.face_align_data_param().random_event_permutations_equally_prob();
 
   const string &mean_shape_file = param.face_align_data_param().mean_shape_file();
   if (Caffe::root_solver())
@@ -300,115 +301,136 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
   double translationXStdDev = translationMultX_ * face_box.width;
   double translationYStdDev = translationMultY_ * face_box.height;
 
-  // double rotation_prob, offsetX_prob, offsetY_prob, scaling_prob;
+  double rotation_prob, offsetX_prob, offsetY_prob, scaling_prob;
   double angle = 0., offsetX = 0., offsetY = 0., scaling = 1.;
-  int num_random_events = 0;
+
+  int probs = 0;
   std::map<std::string, int> random_type_to_idx;
   std::map<int, std::string> idx_to_random_type;
-  if (random_translationX_) {
-    random_type_to_idx["random_translationX_"] = static_cast<int>(std::pow(2, num_random_events));
-    idx_to_random_type[num_random_events] = "random_translationX_";
-    ++num_random_events;
+  if (random_event_permutations_equally_prob_)
+  {
+    int num_random_events = 0;
+    std::map<std::string, int> random_type_to_idx;
+    std::map<int, std::string> idx_to_random_type;
+    if (random_translationX_)
+    {
+      random_type_to_idx["random_translationX_"] = static_cast<int>(std::pow(2, num_random_events));
+      idx_to_random_type[num_random_events] = "random_translationX_";
+      ++num_random_events;
+    }
+    if (random_translationY_)
+    {
+      random_type_to_idx["random_translationY_"] = static_cast<int>(std::pow(2, num_random_events));
+      idx_to_random_type[num_random_events] = "random_translationY_";
+      ++num_random_events;
+    }
+    if (random_scale_)
+    {
+      random_type_to_idx["random_scale_"] = static_cast<int>(std::pow(2, num_random_events));
+      idx_to_random_type[num_random_events] = "random_scale_";
+      ++num_random_events;
+    }
+    if (random_rotation_)
+    {
+      random_type_to_idx["random_rotation_"] = static_cast<int>(std::pow(2, num_random_events));
+      idx_to_random_type[num_random_events] = "random_rotation_";
+      ++num_random_events;
+    }
+    if (random_mirror_)
+    {
+      random_type_to_idx["random_mirror_"] = static_cast<int>(std::pow(2, num_random_events));
+      idx_to_random_type[num_random_events] = "random_mirror_";
+      ++num_random_events;
+    }
+    if (gauss_blur_)
+    {
+      random_type_to_idx["gauss_blur_"] = static_cast<int>(std::pow(2, num_random_events));
+      idx_to_random_type[num_random_events] = "gauss_blur_";
+      ++num_random_events;
+    }
+    int num_permutations = static_cast<int>(std::pow(2, num_random_events));
+    
+    caffe_rng_uniform<int>(1, 0, num_permutations - 1, &probs);
+    DLOG(INFO) << num_random_events << " " << num_permutations << " " << probs;
+    for (int i = 0; i < num_random_events; ++i)
+    {
+      DLOG(INFO) << (probs & random_type_to_idx[idx_to_random_type[i]]);
+    }
+    if (random_translationX_ && (probs & random_type_to_idx["random_translationX_"]))
+    {
+      caffe_rng_uniform<double>(1, -translationXStdDev, translationXStdDev, &offsetX);
+    }
+    if (random_translationY_ && (probs & random_type_to_idx["random_translationY_"]))
+    {
+      caffe_rng_uniform<double>(1, -translationYStdDev, translationYStdDev, &offsetY);
+    }
+    if (random_scale_ && (probs & random_type_to_idx["random_scale_"]))
+    {
+      caffe_rng_uniform<double>(1, 1.f - scaleStdDev_, 1.f + scaleStdDev_, &scaling);
+    }
+    if (random_rotation_ && (probs & random_type_to_idx["random_rotation_"]))
+    {
+      caffe_rng_uniform<double>(1, -rotationStdDevRad, rotationStdDevRad, &angle);
+    }
   }
-  if (random_translationY_) {
-    random_type_to_idx["random_translationY_"] = static_cast<int>(std::pow(2, num_random_events));
-    idx_to_random_type[num_random_events] = "random_translationY_";
-    ++num_random_events;
-  }
-  if (random_scale_) {
-    random_type_to_idx["random_scale_"] = static_cast<int>(std::pow(2, num_random_events));
-    idx_to_random_type[num_random_events] = "random_scale_";
-    ++num_random_events;
-  }
-  if (random_rotation_) {
-    random_type_to_idx["random_rotation_"] = static_cast<int>(std::pow(2, num_random_events));
-    idx_to_random_type[num_random_events] = "random_rotation_";
-    ++num_random_events;
-  }
-  if (random_mirror_) {
-    random_type_to_idx["random_mirror_"] = static_cast<int>(std::pow(2, num_random_events));
-    idx_to_random_type[num_random_events] = "random_mirror_";
-    ++num_random_events;
-  }
-  if (gauss_blur_) {
-    random_type_to_idx["gauss_blur_"] = static_cast<int>(std::pow(2, num_random_events));
-    idx_to_random_type[num_random_events] = "gauss_blur_";
-    ++num_random_events;
-  }
-  int num_permutations = static_cast<int>(std::pow(2, num_random_events));
-  int probs = 0;
-  caffe_rng_uniform<int>(1, 0, num_permutations - 1, &probs);
-  DLOG(INFO) << num_random_events << " " << num_permutations << " " << probs;
-  for (int i = 0; i < num_random_events; ++i) {
-    DLOG(INFO) << (probs & random_type_to_idx[idx_to_random_type[i]]);
-  }
-  if (random_translationX_ && (probs & random_type_to_idx["random_translationX_"])) {
-    caffe_rng_uniform<double>(1, -translationXStdDev, translationXStdDev, &offsetX);
-  }
-  if (random_translationY_ && (probs & random_type_to_idx["random_translationY_"])) {
-    caffe_rng_uniform<double>(1, -translationYStdDev, translationYStdDev, &offsetY);
-  }
-  if (random_scale_ && (probs & random_type_to_idx["random_scale_"])) {
-    caffe_rng_uniform<double>(1, 1.f - scaleStdDev_, 1.f + scaleStdDev_, &scaling);
-  }
-  if (random_rotation_ && (probs & random_type_to_idx["random_rotation_"])) {
-    caffe_rng_uniform<double>(1, -rotationStdDevRad, rotationStdDevRad, &angle);
-  }
+  else
+  {
 
-  // if (random_rotation_)
-  // {
-  //   caffe_rng_uniform<double>(1, 0.f, 1.f, &rotation_prob);
-  //   if (rotation_prob < rotation_prob_)
-  //   {
-  //     //caffe_rng_gaussian<double>(1, 0.f, rotationStdDevRad, &angle);
-  //     caffe_rng_uniform<double>(1, -rotationStdDevRad, rotationStdDevRad, &angle);
-  //   }
-  // }
-  // else
-  // {
-  //   angle = 0.;
-  // }
+    if (random_rotation_)
+    {
+      caffe_rng_uniform<double>(1, 0.f, 1.f, &rotation_prob);
+      if (rotation_prob < rotation_prob_)
+      {
+        //caffe_rng_gaussian<double>(1, 0.f, rotationStdDevRad, &angle);
+        caffe_rng_uniform<double>(1, -rotationStdDevRad, rotationStdDevRad, &angle);
+      }
+    }
+    else
+    {
+      angle = 0.;
+    }
 
-  // if (random_translationX_)
-  // {
-  //   caffe_rng_uniform<double>(1, 0.f, 1.f, &offsetX_prob);
-  //   if (offsetX_prob < translationX_prob_)
-  //   {
-  //     //caffe_rng_gaussian<double>(1, 0.f, translationXStdDev, &offsetX);
-  //     caffe_rng_uniform<double>(1, -translationXStdDev, translationXStdDev, &offsetX);
-  //   }
-  // }
-  // else
-  // {
-  //   offsetX = 0.;
-  // }
+    if (random_translationX_)
+    {
+      caffe_rng_uniform<double>(1, 0.f, 1.f, &offsetX_prob);
+      if (offsetX_prob < translationX_prob_)
+      {
+        //caffe_rng_gaussian<double>(1, 0.f, translationXStdDev, &offsetX);
+        caffe_rng_uniform<double>(1, -translationXStdDev, translationXStdDev, &offsetX);
+      }
+    }
+    else
+    {
+      offsetX = 0.;
+    }
 
-  // if (random_translationY_)
-  // {
-  //   caffe_rng_uniform<double>(1, 0.f, 1.f, &offsetY_prob);
-  //   if (offsetY_prob < translationY_prob_)
-  //   {
-  //     //caffe_rng_gaussian<double>(1, 0.f, translationYStdDev, &offsetY);
-  //     caffe_rng_uniform<double>(1, -translationYStdDev, translationYStdDev, &offsetY);
-  //   }
-  // }
-  // else
-  // {
-  //   offsetY = 0.;
-  // }
-  // if (random_scale_)
-  // {
-  //   caffe_rng_uniform<double>(1, 0.f, 1.f, &scaling_prob);
-  //   if (scaling_prob < scale_prob_)
-  //   {
-  //     //caffe_rng_gaussian<double>(1, 1.f, scaleStdDev_, &scaling);
-  //     caffe_rng_uniform<double>(1, 1.f - scaleStdDev_, 1.f + scaleStdDev_, &scaling);
-  //   }
-  // }
-  // else
-  // {
-  //   scaling = 1.;
-  // }
+    if (random_translationY_)
+    {
+      caffe_rng_uniform<double>(1, 0.f, 1.f, &offsetY_prob);
+      if (offsetY_prob < translationY_prob_)
+      {
+        //caffe_rng_gaussian<double>(1, 0.f, translationYStdDev, &offsetY);
+        caffe_rng_uniform<double>(1, -translationYStdDev, translationYStdDev, &offsetY);
+      }
+    }
+    else
+    {
+      offsetY = 0.;
+    }
+    if (random_scale_)
+    {
+      caffe_rng_uniform<double>(1, 0.f, 1.f, &scaling_prob);
+      if (scaling_prob < scale_prob_)
+      {
+        //caffe_rng_gaussian<double>(1, 1.f, scaleStdDev_, &scaling);
+        caffe_rng_uniform<double>(1, 1.f - scaleStdDev_, 1.f + scaleStdDev_, &scaling);
+      }
+    }
+    else
+    {
+      scaling = 1.;
+    }
+  }
 
   cv::Rect_<float> temp_face_box = face_box;
   temp_face_box.x += offsetX;
@@ -503,33 +525,40 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
 
   cv::resize(warpImage, tempImg, cv::Size(new_image_size_, new_image_size_));
 
-  // random mirror
-  if (random_mirror_ && (probs & random_type_to_idx["random_mirror_"]))
+  if (random_event_permutations_equally_prob_)
   {
-    cv::Mat tempShape = mirrorShape(tempGroundTruth, tempImg);
-    cv::flip(tempImg, tempImg, 1);
-    tempGroundTruth = tempShape;
+    // random mirror
+    if (random_mirror_ && (probs & random_type_to_idx["random_mirror_"]))
+    {
+      cv::Mat tempShape = mirrorShape(tempGroundTruth, tempImg);
+      cv::flip(tempImg, tempImg, 1);
+      tempGroundTruth = tempShape;
+    }
+    if (probs & random_type_to_idx["gauss_blur_"])
+    {
+      ApplyNoise(tempImg, tempImg);
+    }
   }
-  // if (random_mirror_)
-  // {
-  //   float mirror_prob;
-  //   caffe_rng_uniform<float>(1, 0.f, 1.f, &mirror_prob);
-  //   if (mirror_prob < mirror_prob_)
-  //   {
-  //     cv::Mat tempShape = mirrorShape(tempGroundTruth, tempImg);
-  //     cv::flip(tempImg, tempImg, 1);
-  //     tempGroundTruth = tempShape;
-  //   }
-  // }
+  else
+  {
+    if (random_mirror_)
+    {
+      float mirror_prob;
+      caffe_rng_uniform<float>(1, 0.f, 1.f, &mirror_prob);
+      if (mirror_prob < mirror_prob_)
+      {
+        cv::Mat tempShape = mirrorShape(tempGroundTruth, tempImg);
+        cv::flip(tempImg, tempImg, 1);
+        tempGroundTruth = tempShape;
+      }
+    }
 
-  // if (gauss_blur_)
-  // {
-  //   ApplyNoise(tempImg, tempImg);
-  // }
-  if (probs & random_type_to_idx["gauss_blur_"])
-  {
-    ApplyNoise(tempImg, tempImg);
+    if (gauss_blur_)
+    {
+      ApplyNoise(tempImg, tempImg);
+    }
   }
+
   return true;
 }
 
