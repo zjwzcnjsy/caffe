@@ -252,6 +252,9 @@ float caffe_nextafter(const float b);
 template
 double caffe_nextafter(const double b);
 
+template
+int caffe_nextafter(const int b);
+
 template <typename Dtype>
 void caffe_rng_uniform(const int n, const Dtype a, const Dtype b, Dtype* r) {
   CHECK_GE(n, 0);
@@ -272,6 +275,19 @@ void caffe_rng_uniform<float>(const int n, const float a, const float b,
 template
 void caffe_rng_uniform<double>(const int n, const double a, const double b,
                                double* r);
+
+template <>
+void caffe_rng_uniform<int>(const int n, const int a, const int b, int* r) {
+  CHECK_GE(n, 0);
+  CHECK(r);
+  CHECK_LE(a, b);
+  boost::uniform_int<int> random_distribution(a, caffe_nextafter<int>(b));
+  boost::variate_generator<caffe::rng_t*, boost::uniform_int<int> >
+      variate_generator(caffe_rng(), random_distribution);
+  for (int i = 0; i < n; ++i) {
+    r[i] = variate_generator();
+  }
+}
 
 template <typename Dtype>
 void caffe_rng_gaussian(const int n, const Dtype a,
