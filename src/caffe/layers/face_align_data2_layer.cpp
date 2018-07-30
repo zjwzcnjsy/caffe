@@ -206,7 +206,7 @@ void FaceAlignData2Layer<Dtype>::load_batch(FaceAlignBatch<Dtype> *batch)
     // cv::imshow("origin_image", image);
     cv::Mat roll_norm_image = image.clone();
     cv::Mat roll_norm_landmark = cur_shape.clone();
-    // roll_norm(image, cur_shape, roll_norm_image, roll_norm_landmark);
+    roll_norm(image, cur_shape, roll_norm_image, roll_norm_landmark);
 
     // for (int i = 0; i < num_landmark_; ++i) {
     //   cv::circle(roll_norm_image, cv::Point(roll_norm_landmark.at<float>(i, 0), roll_norm_landmark.at<float>(i, 1)),
@@ -594,7 +594,7 @@ void FaceAlignData2Layer<Dtype>::roll_norm(const cv::Mat& orgImage, const cv::Ma
   M.at<double>(0, 2) = -(image_center.x * M.at<double>(0, 0) + image_center.y * M.at<double>(0, 1)) + dstSize.width / 2.;
   M.at<double>(1, 2) = -(image_center.x * M.at<double>(1, 0) + image_center.y * M.at<double>(1, 1)) + dstSize.height / 2.;
   
-  cv::warpAffine(orgImage, dstImage, M, dstSize);
+  cv::warpAffine(orgImage, dstImage, M, orgImage.size());
   dstGT = orgGT.clone();
   for (int i = 0; i < orgGT.rows; ++i)
   {
