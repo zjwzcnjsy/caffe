@@ -205,10 +205,10 @@ void FaceAlignData2Layer<Dtype>::load_batch(FaceAlignBatch<Dtype> *batch)
     // }
     // cv::rectangle(image, face_box, cv::Scalar(0, 255, 0), 2);
     // cv::imshow("origin_image", image);
-    cv::Mat roll_norm_image = image.clone();
-    cv::Mat roll_norm_landmark = cur_shape.clone();
-    cv::Rect_<float> roll_norm_face_box = face_box;
-    roll_norm(image, face_box, cur_shape, roll_norm_image, roll_norm_landmark, roll_norm_face_box);
+    //cv::Mat roll_norm_image = image.clone();
+    //cv::Mat roll_norm_landmark = cur_shape.clone();
+    //cv::Rect_<float> roll_norm_face_box = face_box;
+    //roll_norm(image, face_box, cur_shape, roll_norm_image, roll_norm_landmark, roll_norm_face_box);
 
     // for (int i = 0; i < num_landmark_; ++i) {
     //   cv::circle(roll_norm_image, cv::Point(roll_norm_landmark.at<float>(i, 0), roll_norm_landmark.at<float>(i, 1)),
@@ -227,7 +227,7 @@ void FaceAlignData2Layer<Dtype>::load_batch(FaceAlignBatch<Dtype> *batch)
     do
     {
       flag = generatePerturbation(
-          roll_norm_image, roll_norm_landmark, roll_norm_face_box, tempImg, tempGroundTruth);
+          image, cur_shape, face_box, tempImg, tempGroundTruth);
       ++trials;
       if (trials >= max_trials_)
       {
@@ -460,6 +460,11 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
   cv::Point2f temp_face_box_center(temp_face_box.x + temp_face_box.width / 2.,
                                    temp_face_box.y + temp_face_box.height / 2.);
 
+  cv::Point2f left_eye(groundTruth.at<float>(0, 0), groundTruth.at<float>(0, 1));
+  cv::Point2f right_eye(groundTruth.at<float>(1, 0), groundTruth.at<float>(1, 1));
+  double angle2 = atan2(right_eye.y-left_eye.y, right_eye.x-left_eye.x);
+
+  angle += angle2;
   double w = temp_face_box.width;
   double h = temp_face_box.height;
   double angle_abs = abs(angle);
