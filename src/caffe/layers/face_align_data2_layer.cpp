@@ -203,16 +203,18 @@ void FaceAlignData2Layer<Dtype>::load_batch(FaceAlignBatch<Dtype> *batch)
     //   cv::circle(image, cv::Point(cur_shape.at<float>(i, 0), cur_shape.at<float>(i, 1)),
     //     2, cv::Scalar(0, 0, 255), 2);
     // }
+    // cv::rectangle(image, face_box, cv::Scalar(0, 255, 0), 2);
     // cv::imshow("origin_image", image);
     cv::Mat roll_norm_image = image.clone();
     cv::Mat roll_norm_landmark = cur_shape.clone();
-    roll_norm(image, cur_shape, roll_norm_image, roll_norm_landmark);
+    cv::Rect_<float> roll_norm_face_box = face_box;
+    roll_norm(image, face_box, cur_shape, roll_norm_image, roll_norm_landmark, roll_norm_face_box);
 
     // for (int i = 0; i < num_landmark_; ++i) {
     //   cv::circle(roll_norm_image, cv::Point(roll_norm_landmark.at<float>(i, 0), roll_norm_landmark.at<float>(i, 1)),
     //     2, cv::Scalar(0, 255, 0), 2);
     // }
-
+    // cv::rectangle(roll_norm_image, roll_norm_face_box, cv::Scalar(0, 0, 255), 2);
     // cv::imshow("origin_image2", roll_norm_image);
     // cv::waitKey(100);
 
@@ -225,7 +227,7 @@ void FaceAlignData2Layer<Dtype>::load_batch(FaceAlignBatch<Dtype> *batch)
     do
     {
       flag = generatePerturbation(
-          roll_norm_image, roll_norm_landmark, face_box, tempImg, tempGroundTruth);
+          roll_norm_image, roll_norm_landmark, roll_norm_face_box, tempImg, tempGroundTruth);
       ++trials;
       if (trials >= max_trials_)
       {
@@ -575,7 +577,13 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
 }
 
 template <typename Dtype>
-void FaceAlignData2Layer<Dtype>::roll_norm(const cv::Mat& orgImage, const cv::Mat& orgGT, cv::Mat& dstImage, cv::Mat& dstGT)
+void FaceAlignData2Layer<Dtype>::roll_norm(
+  const cv::Mat& orgImage, 
+  const cv::Rect_<float>& orgBox, 
+  const cv::Mat& orgGT,
+  cv::Mat& dstImage, 
+  cv::Mat& dstGT, 
+  cv::Rect_<float>& dstBox)
 {
   cv::Point2f image_center(orgImage.cols / 2., orgImage.rows / 2.);
   cv::Point2f left_eye(orgGT.at<float>(0, 0), orgGT.at<float>(0, 1));
@@ -603,6 +611,17 @@ void FaceAlignData2Layer<Dtype>::roll_norm(const cv::Mat& orgImage, const cv::Ma
     dstGT.at<float>(i, 0) = M.at<double>(0, 0) * x + M.at<double>(0, 1) * y + M.at<double>(0, 2);
     dstGT.at<float>(i, 1) = M.at<double>(1, 0) * x + M.at<double>(1, 1) * y + M.at<double>(1, 2);
   }
+
+  cv::Point2f face_box_center(orgBox.x + orgBox.width / 2.,
+                              orgBox.y + orgBox.height / 2.);
+  cv::Point2f dst_face_box_center(M.at<double>(0, 0) * face_box_center.x + M.at<double>(0, 1) * face_box_center.y + M.at<double>(0, 2),
+                          M.at<double>(1, 0) * face_box_center.x + M.at<double>(1, 1) * face_box_center.y + M.at<double>(1, 2));
+  double dst_face_box_width = orgBox.width * cos(angle_abs) + orgBox.height * sin(angle_abs);
+  double dst_face_box_height = orgBox.width * sin(angle_abs) + orgBox.height * cos(angle_abs);
+  dstBox.x = dst_face_box_center.x - dst_face_box_width / 2.;
+  dstBox.y = dst_face_box_center.y - dst_face_box_height / 2.;
+  dstBox.width = dst_face_box_width;
+  dstBox.height = dst_face_box_height;
 }
 
 template <typename Dtype>
