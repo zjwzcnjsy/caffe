@@ -25,6 +25,7 @@ class FaceAlignData2Layer : public FaceAlignBasePrefetchingDataLayer<Dtype> {
   virtual inline int MinTopBlobs() const { return 1; }
   virtual inline int MaxTopBlobs() const { return 2; }
 
+  void roll_norm(const cv::Mat& orgImage, const cv::Mat& orgGT, cv::Mat& dstImage, cv::Mat& dstGT);
   cv::Mat bestFitRect(const cv::Mat& groundTruth, const cv::Mat& meanShape);
   cv::Mat mirrorShape(const cv::Mat& groundTruth, const cv::Mat& image);
   bool generatePerturbation(

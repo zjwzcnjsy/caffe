@@ -203,6 +203,18 @@ void FaceAlignData2Layer<Dtype>::load_batch(FaceAlignBatch<Dtype> *batch)
     //   cv::circle(image, cv::Point(cur_shape.at<float>(i, 0), cur_shape.at<float>(i, 1)),
     //     2, cv::Scalar(0, 0, 255), 2);
     // }
+    // cv::imshow("origin_image", image);
+    cv::Mat roll_norm_image;
+    cv::Mat roll_norm_landmark;
+    roll_norm(image, cur_shape, roll_norm_image, roll_norm_landmark);
+
+    // for (int i = 0; i < num_landmark_; ++i) {
+    //   cv::circle(roll_norm_image, cv::Point(roll_norm_landmark.at<float>(i, 0), roll_norm_landmark.at<float>(i, 1)),
+    //     2, cv::Scalar(0, 255, 0), 2);
+    // }
+
+    // cv::imshow("origin_image2", roll_norm_image);
+    // cv::waitKey(100);
 
     // Apply data transformations (mirror, scale, crop...)
     timer.Start();
@@ -213,7 +225,7 @@ void FaceAlignData2Layer<Dtype>::load_batch(FaceAlignBatch<Dtype> *batch)
     do
     {
       flag = generatePerturbation(
-          image, cur_shape, face_box, tempImg, tempGroundTruth);
+          roll_norm_image, roll_norm_landmark, face_box, tempImg, tempGroundTruth);
       ++trials;
       if (trials >= max_trials_)
       {
@@ -560,6 +572,37 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
   }
 
   return true;
+}
+
+template <typename Dtype>
+void FaceAlignData2Layer<Dtype>::roll_norm(const cv::Mat& orgImage, const cv::Mat& orgGT, cv::Mat& dstImage, cv::Mat& dstGT)
+{
+  cv::Point2f image_center(orgImage.cols / 2., orgImage.rows / 2.);
+  cv::Point2f left_eye(orgGT.at<float>(0, 0), orgGT.at<float>(0, 1));
+  cv::Point2f right_eye(orgGT.at<float>(1, 0), orgGT.at<float>(1, 1));
+  cv::Point2f mid_eye((left_eye.x + right_eye.x) / 2., (left_eye.y + right_eye.y) / 2.);
+  double angle = atan2(right_eye.y-left_eye.y, right_eye.x-left_eye.x);
+  double angle_abs = fabs(angle);
+  int w = orgImage.cols;
+  int h = orgImage.rows;
+  cv::Size dstSize(w * cos(angle_abs) + h * sin(angle_abs), w * sin(angle_abs) + h * cos(angle_abs));
+  cv::Mat M(2, 3, CV_64FC1);
+  M.at<double>(0, 0) = cos(angle);
+  M.at<double>(0, 1) = sin(angle);
+  M.at<double>(1, 0) = -sin(angle);
+  M.at<double>(1, 1) = cos(angle);
+  M.at<double>(0, 2) = -(image_center.x * M.at<double>(0, 0) + image_center.y * M.at<double>(0, 1)) + dstSize.width / 2.;
+  M.at<double>(1, 2) = -(image_center.x * M.at<double>(1, 0) + image_center.y * M.at<double>(1, 1)) + dstSize.height / 2.;
+  
+  cv::warpAffine(orgImage, dstImage, M, dstSize);
+  dstGT = orgGT.clone();
+  for (int i = 0; i < orgGT.rows; ++i)
+  {
+    float x = orgGT.at<float>(i, 0);
+    float y = orgGT.at<float>(i, 1);
+    dstGT.at<float>(i, 0) = M.at<double>(0, 0) * x + M.at<double>(0, 1) * y + M.at<double>(0, 2);
+    dstGT.at<float>(i, 1) = M.at<double>(1, 0) * x + M.at<double>(1, 1) * y + M.at<double>(1, 2);
+  }
 }
 
 template <typename Dtype>
