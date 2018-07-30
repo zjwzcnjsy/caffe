@@ -204,9 +204,9 @@ void FaceAlignData2Layer<Dtype>::load_batch(FaceAlignBatch<Dtype> *batch)
     //     2, cv::Scalar(0, 0, 255), 2);
     // }
     // cv::imshow("origin_image", image);
-    cv::Mat roll_norm_image;
-    cv::Mat roll_norm_landmark;
-    roll_norm(image, cur_shape, roll_norm_image, roll_norm_landmark);
+    cv::Mat roll_norm_image = image.clone();
+    cv::Mat roll_norm_landmark = cur_shape.clone();
+    // roll_norm(image, cur_shape, roll_norm_image, roll_norm_landmark);
 
     // for (int i = 0; i < num_landmark_; ++i) {
     //   cv::circle(roll_norm_image, cv::Point(roll_norm_landmark.at<float>(i, 0), roll_norm_landmark.at<float>(i, 1)),
