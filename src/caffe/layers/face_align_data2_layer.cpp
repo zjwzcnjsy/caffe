@@ -462,7 +462,7 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
 
   cv::Point2f left_eye(groundTruth.at<float>(0, 0), groundTruth.at<float>(0, 1));
   cv::Point2f right_eye(groundTruth.at<float>(1, 0), groundTruth.at<float>(1, 1));
-  double angle2 = atan2(right_eye.y-left_eye.y, right_eye.x-left_eye.x);
+  double angle2 = atan((right_eye.y-left_eye.y) / (right_eye.x-left_eye.x));
 
   angle += angle2;
   double w = temp_face_box.width;
