@@ -463,13 +463,18 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
 
   cv::Point2f left_eye(groundTruth.at<float>(0, 0), groundTruth.at<float>(0, 1));
   cv::Point2f right_eye(groundTruth.at<float>(1, 0), groundTruth.at<float>(1, 1));
-  double angle2 = atan((right_eye.y-left_eye.y) / (right_eye.x-left_eye.x));
+  double angle2 = atan2((right_eye.y-left_eye.y), (right_eye.x-left_eye.x));
   if (roll_norm_) {
     angle += angle2;
   }
   double w = temp_face_box.width;
   double h = temp_face_box.height;
   double angle_abs = abs(angle);
+  if (angle_abs > CAFFE_PI / 2. && angle_abs <= CAFFE_PI) {
+    angle_abs = CAFFE_PI - angle_abs;
+  } else if (angle_abs > CAFFE_PI) {
+    angle_abs = angle_abs - CAFFE_PI;
+  }
   double square_temp_face_box_size = std::max(w * cos(angle_abs) + h * sin(angle_abs), w * sin(angle_abs) + h * cos(angle_abs));
   w = face_box.width;
   h = face_box.height;
