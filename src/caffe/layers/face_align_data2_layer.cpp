@@ -58,6 +58,7 @@ FaceAlignData2Layer<Dtype>::FaceAlignData2Layer(const LayerParameter &param)
   min_jaccard_overlap_ = param.face_align_data_param().min_jaccard_overlap();
   landmark_vision_ = param.face_align_data_param().landmark_vision();
   random_event_permutations_equally_prob_ = param.face_align_data_param().random_event_permutations_equally_prob();
+  roll_norm_ = param.face_align_data_param().roll_norm();
 
   const string &mean_shape_file = param.face_align_data_param().mean_shape_file();
   if (Caffe::root_solver())
@@ -463,8 +464,9 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
   cv::Point2f left_eye(groundTruth.at<float>(0, 0), groundTruth.at<float>(0, 1));
   cv::Point2f right_eye(groundTruth.at<float>(1, 0), groundTruth.at<float>(1, 1));
   double angle2 = atan((right_eye.y-left_eye.y) / (right_eye.x-left_eye.x));
-
-  angle += angle2;
+  if (roll_norm_) {
+    angle += angle2;
+  }
   double w = temp_face_box.width;
   double h = temp_face_box.height;
   double angle_abs = abs(angle);

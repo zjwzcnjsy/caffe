@@ -1518,10 +1518,12 @@ message FaceAlignDataParameter {
   optional bool landmark_vision = 24 [default = true];
   optional float min_jaccard_overlap = 25 [default = 0.0];
   
-  optional bool random_event_permutations_equally_prob = 36 [default = false];
+  optional bool random_event_permutations_equally_prob = 26 [default = false];
 
-  optional bool visualation = 27 [default = false];
-  optional int32 visualation_step = 28 [default = -1];
+  optional bool roll_norm = 27 [default = true];
+
+  optional bool visualation = 28 [default = false];
+  optional int32 visualation_step = 29 [default = -1];
 }
 
 
