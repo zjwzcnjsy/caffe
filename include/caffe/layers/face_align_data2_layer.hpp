@@ -88,6 +88,8 @@ class FaceAlignData2Layer : public FaceAlignBasePrefetchingDataLayer<Dtype> {
   
   bool random_event_permutations_equally_prob_;
   bool roll_norm_;
+
+  bool norm_landmark_;
 };
 
 }  // namespace caffe

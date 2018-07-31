@@ -1522,8 +1522,10 @@ message FaceAlignDataParameter {
 
   optional bool roll_norm = 27 [default = true];
 
-  optional bool visualation = 28 [default = false];
-  optional int32 visualation_step = 29 [default = -1];
+  optional bool norm_landmark = 28 [default = false];
+
+  optional bool visualation = 29 [default = false];
+  optional int32 visualation_step = 30 [default = -1];
 }
 
 

@@ -60,6 +60,8 @@ FaceAlignData2Layer<Dtype>::FaceAlignData2Layer(const LayerParameter &param)
   random_event_permutations_equally_prob_ = param.face_align_data_param().random_event_permutations_equally_prob();
   roll_norm_ = param.face_align_data_param().roll_norm();
 
+  norm_landmark_ = param.face_align_data_param().norm_landmark();
+
   const string &mean_shape_file = param.face_align_data_param().mean_shape_file();
   if (Caffe::root_solver())
   {
@@ -273,10 +275,15 @@ void FaceAlignData2Layer<Dtype>::load_batch(FaceAlignBatch<Dtype> *batch)
       //caffe_copy(datum.label_size(), datum.label(), top_label);
       for (int i = 0; i < num_landmark_; ++i)
       {
-        for (int j = 0; j < 2; ++j)
-        {
-          top_label[item_id * num_landmark_ * 2 + 2 * i + j] = tempGroundTruth.at<float>(i, j);
+        float x = tempGroundTruth.at<float>(i, 0);
+        float y = tempGroundTruth.at<float>(i, 1);
+        if (norm_landmark_) {
+          float norm_size = new_image_size_ / 2.;
+          x = (x - norm_size) / norm_size;
+          y = (y - norm_size) / norm_size;
         }
+        top_label[item_id * num_landmark_ * 2 + 2 * i + 0] = x;
+        top_label[item_id * num_landmark_ * 2 + 2 * i + 1] = y;
       }
     }
     trans_time += timer.MicroSeconds();
@@ -461,11 +468,24 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
   cv::Point2f temp_face_box_center(temp_face_box.x + temp_face_box.width / 2.,
                                    temp_face_box.y + temp_face_box.height / 2.);
 
+
+  // cv::Point2f left_eye(groundTruth.at<float>(0, 0), groundTruth.at<float>(0, 1));
+  // cv::Point2f right_eye(groundTruth.at<float>(1, 0), groundTruth.at<float>(1, 1));
+  // double angle2 = atan2((right_eye.y-left_eye.y), (right_eye.x-left_eye.x));
+  // if (roll_norm_) {
+  //   angle += angle2;
+  // }
+
   cv::Point2f left_eye(groundTruth.at<float>(0, 0), groundTruth.at<float>(0, 1));
   cv::Point2f right_eye(groundTruth.at<float>(1, 0), groundTruth.at<float>(1, 1));
-  double angle2 = atan2((right_eye.y-left_eye.y), (right_eye.x-left_eye.x));
-  if (roll_norm_) {
-    angle += angle2;
+  cv::Point2f left_mouth(groundTruth.at<float>(3, 0), groundTruth.at<float>(3, 1));
+  cv::Point2f right_mouth(groundTruth.at<float>(4, 0), groundTruth.at<float>(4, 1));
+  cv::Point2f eye_center((left_eye.x + right_eye.x) / 2., (left_eye.y + right_eye.y) / 2.);
+  cv::Point2f mouth_center((left_mouth.x + right_mouth.x) / 2., (left_mouth.y + right_mouth.y) / 2.);
+  double angle2 = atan2((mouth_center.x-eye_center.x), (mouth_center.y-eye_center.y));
+  if (roll_norm_)
+  {
+    angle -= angle2;
   }
   double w = temp_face_box.width;
   double h = temp_face_box.height;
