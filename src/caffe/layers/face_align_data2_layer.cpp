@@ -332,8 +332,6 @@ bool FaceAlignData2Layer<Dtype>::generatePerturbation(
   if (random_event_permutations_equally_prob_)
   {
     int num_random_events = 0;
-    std::map<std::string, int> random_type_to_idx;
-    std::map<int, std::string> idx_to_random_type;
     if (random_translationX_)
     {
       random_type_to_idx["random_translationX_"] = static_cast<int>(std::pow(2, num_random_events));
